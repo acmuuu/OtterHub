@@ -1,4 +1,5 @@
 import { BaseAdapter } from "./base-adapter";
+import { getTextFromCache, putTextToCache } from "@utils/cache";
 import { failResponse } from "@utils/response";
 import { encodeContentDisposition } from "../common";
 import { buildKeyId, getFileIdFromKey, getContentTypeByExt } from "../file";
@@ -32,14 +33,11 @@ export class TGAdapter extends BaseAdapter {
   }
 
   private async getCachedTgFilePath(fileId: string, forceRefresh: boolean = false): Promise<string | null> {
-    const kv = this.env[this.kvName];
-    const cacheKey = `tgpath:${fileId}`;
-
     if (!forceRefresh) {
       try {
-        const { metadata } = await kv.getWithMetadata(cacheKey);
-        if (metadata?.tgFilePath) {
-          return metadata.tgFilePath;
+        const cachedPath = await getTextFromCache("tgpath", fileId);
+        if (cachedPath) {
+          return cachedPath;
         }
       } catch (error) {
         console.warn(`[TGAdapter] Cache read failed for fileId: ${fileId}`, error);
@@ -50,13 +48,7 @@ export class TGAdapter extends BaseAdapter {
     if (!filePath) return null;
 
     try {
-      await kv.put(cacheKey, '', {
-        // Telegram 文件链接有效期为 1 小时，缓存 55 分钟以防过期
-        expirationTtl: 3300, 
-        metadata: {
-          tgFilePath: filePath,
-        }
-      });
+      await putTextToCache("tgpath", fileId, filePath, 3300);
     } catch (error) {
       console.warn(`[TGAdapter] Cache write failed for fileId: ${fileId}`, error);
     }

@@ -1,72 +1,75 @@
 // functions/utils/cache.ts
 
-/**
- * 缓存配置常量
- */
 export const CACHE_CONFIG = {
-  file: {
-    maxAge: 86400 * 7,     // 7 天
-  },
-  thumb: {
-    maxAge: 86400 * 1,     // 1 天
-  },
-  api: {
-    maxAge: 3600,          // 1 小时
-  },
+  file: { maxAge: 86400 * 7 }, // 7 天
+  thumb: { maxAge: 86400 * 1 }, // 1 天
+  api: { maxAge: 3600 },        // 1 小时
+} as const;
+
+const CACHE_NAME = 'otterhub-cache';
+const INTERNAL_CACHE_ORIGIN = 'https://otterhub.internal';
+
+// 懒加载 Cache 实例，避免重复代码
+const getCache = () => caches.open(CACHE_NAME);
+
+/**
+ * 统一处理 Cache Key，支持 Request 或 URL 字符串，强制转换为 GET 请求
+ */
+export const createCacheKey = (reqOrUrl: Request | string): Request => {
+  const url = typeof reqOrUrl === 'string' ? reqOrUrl : reqOrUrl.url;
+  return new Request(url, { method: 'GET' });
 };
 
+export const createNamespacedCacheKey = (namespace: string, key: string) => 
+  createCacheKey(`${INTERNAL_CACHE_ORIGIN}/${namespace}/${encodeURIComponent(key)}`);
 
-export function createCacheKey(request: Request): Request {
-  const url = new URL(request.url);
-  // 只缓存 GET
-  return new Request(url.toString(), {
-    method: "GET",
+// ==========================================
+// 标准 HTTP 响应缓存
+// ==========================================
+
+export async function getFromCache(request: Request): Promise<Response | null> {
+  return (await getCache()).match(createCacheKey(request));
+}
+
+export async function putToCache(request: Request, response: Response, type: keyof typeof CACHE_CONFIG) {
+  // 忽略非成功状态和 Cache API 不支持的 206 状态
+  if (!response.ok || response.status === 206) return;
+
+  // 必须解构创建全新的 Response 对象，因为原始 response.headers 是不可变 (immutable) 的
+  const newHeaders = new Headers(response.headers);
+  newHeaders.set("Cache-Control", `public, max-age=${CACHE_CONFIG[type].maxAge}`);
+
+  const cachedResp = new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: newHeaders,
   });
-}
 
-export async function getFromCache(
-  request: Request
-): Promise<Response | null> {
-  const cache = await caches.open('otterhub-cache');
-  const key = createCacheKey(request);
-  return cache.match(key);
-}
-
-export async function putToCache(
-  request: Request,
-  response: Response,
-  type: keyof typeof CACHE_CONFIG
-) {
-  if (!response.ok) return;
-  // Cloudflare Workers Cache API does not support manually caching 206 Partial Content responses
-  if (response.status === 206) return;
-
-  const cache = await caches.open('otterhub-cache');
-  const key = createCacheKey(request);
-
-  const maxAge = CACHE_CONFIG[type].maxAge;
-
-  const cachedResp = response.clone();
-  cachedResp.headers.set(
-    "Cache-Control",
-    `public, max-age=${maxAge}`
-  );
-
-  await cache.put(key, cachedResp);
+  await (await getCache()).put(createCacheKey(request), cachedResp);
 }
 
 export async function deleteCache(request: Request) {
-  const cache = await caches.open('otterhub-cache');
-  const key = createCacheKey(request);
-  await cache.delete(key);
+  await (await getCache()).delete(createCacheKey(request));
 }
 
-/**
- * 删除文件访问缓存（/file/:key）
- */
 export async function deleteFileCache(origin: string, key: string) {
-  const cache = await caches.open('otterhub-cache');
-  const url = `${origin}/file/${key}`;
-  const req = new Request(url, { method: "GET" });
-  await cache.delete(req);
+  await (await getCache()).delete(createCacheKey(`${origin}/file/${key}`));
+}
+
+// ==========================================
+// 内部纯文本/KV 缓存
+// ==========================================
+
+export async function getTextFromCache(namespace: string, key: string): Promise<string | null> {
+  const cached = await (await getCache()).match(createNamespacedCacheKey(namespace, key));
+  return cached ? cached.text() : null;
+}
+
+export async function putTextToCache(namespace: string, key: string, value: string, maxAge: number): Promise<void> {
+  await (await getCache()).put(
+    createNamespacedCacheKey(namespace, key),
+    new Response(value, {
+      headers: { "Cache-Control": `public, max-age=${maxAge}` },
+    })
+  );
 }
