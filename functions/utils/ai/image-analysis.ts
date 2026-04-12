@@ -24,7 +24,7 @@ type AIImageSource = {
 const SUPPORTED_IMAGE_PREFIXES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 /** AI 输入最大体积，避免 Worker 内存和请求体膨胀 */
-const AI_INPUT_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+const AI_INPUT_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 
 /** AI 分析使用的 Cloudflare image-to-text 模型 */
 const AI_MODEL = "@cf/llava-hf/llava-1.5-7b-hf";
@@ -32,8 +32,8 @@ const AI_MODEL = "@cf/llava-hf/llava-1.5-7b-hf";
 /** AI 描述最大长度，避免 metadata 过大 */
 const AI_DESC_MAX = 300;
 
-/** 直接要求返回简短的一句话描述 */
-const AI_OUTPUT_PROMPT = "Describe this image in one short sentence concisely. No markdown, no extra text, just the description.";
+// 强制输出逗号分隔的标签
+const AI_OUTPUT_PROMPT = "Extract key elements as a comma-separated list of keywords. Include main objects, background, colors, style, and emotional mood/atmosphere. No sentences, no markdown. Example: village, beach, castle, bright blue, oil painting, peaceful.";
 
 /**
  * 判断当前文件是否支持图片 AI 分析。
@@ -72,11 +72,16 @@ function extractImageAiDesc(result: unknown): string {
   return "";
 }
 
-/**
- * 清洗 AI 返回文本，避免写入过长或多行内容。
- */
+// 清洗逻辑改为标签标准化（小写、去除非法标点、去重排版）
 function normalizeAiDesc(desc: string): string {
-  return desc.replace(/\s+/g, " ").trim().slice(0, AI_DESC_MAX);
+  return desc
+    .toLowerCase()
+    .replace(/[^a-z0-9\u4e00-\u9fa5,\s-]/g, "") // 仅保留字母、数字、中文、逗号、空格和连字符
+    .split(",")
+    .map(tag => tag.trim())
+    .filter(Boolean)
+    .join(", ")
+    .slice(0, AI_DESC_MAX);
 }
 
 /**
@@ -194,7 +199,7 @@ export async function analyzeImageAndEnrich(
 
     await kv.put(key, latest.value ?? "", { metadata: updatedMeta });
 
-    // // 如需通知 TG 可取消注释
+    // 可选：通知 TG
     // if (env.TG_BOT_TOKEN && env.TG_CHAT_ID) {
     //   const tgUrl = buildTgApiUrl(env.TG_BOT_TOKEN, "sendMessage");
     //   fetch(tgUrl, {
