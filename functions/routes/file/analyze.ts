@@ -8,6 +8,7 @@ import {
   AI_OUTPUT_PROMPT,
   extractImageDesc,
   normalizeDesc,
+  AI_MAX_TOKENS,
 } from '@utils/ai/image-analysis';
 import type { Env } from '../../types/hono';
 
@@ -43,7 +44,7 @@ analyzeRoutes.post(
       const result = await c.env.AI.run(AI_MODEL, {
         image: Array.from(new Uint8Array(buffer)),
         prompt: AI_OUTPUT_PROMPT,
-        max_tokens: 100,
+        max_tokens: AI_MAX_TOKENS,
       });
 
       const desc = normalizeDesc(extractImageDesc(result));
