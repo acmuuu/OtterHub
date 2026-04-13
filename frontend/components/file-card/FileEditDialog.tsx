@@ -69,8 +69,8 @@ export function FileEditDialog({
     }
   }, [file]);
 
-  // 将图片 URL 加载并压缩为 JPEG Blob（参考 nsfw-detector 的 resizeImage 模式）
-  const compressImageFromUrl = (url: string, size = 480): Promise<Blob> =>
+  // 将图片 URL 加载并压缩为 JPEG Blob
+  const compressImageFromUrl = (url: string, size = 224): Promise<Blob> =>
     new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -81,7 +81,7 @@ export function FileEditDialog({
         canvas.toBlob(
           (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob failed"))),
           "image/jpeg",
-          0.8
+          0.7
         );
       };
       img.onerror = () => reject(new Error("Failed to load image"));
