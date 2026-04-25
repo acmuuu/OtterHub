@@ -1,7 +1,7 @@
 "use client";
 
 import { useActiveBucket, useFilteredFiles, useFileDataStore, useFileQueryStore } from "@/stores/file";
-import { useFileUIStore } from "@/stores/file";
+import { useActiveViewMode, useFileUIStore } from "@/stores/file";
 import { FileCard } from "@/components/file-card";
 import { ViewModeToggle } from "./ViewModeToggle";
 import { SortTypeDropdown } from "./SortTypeDropdown";
@@ -52,7 +52,8 @@ function FileViewRenderer({
 }
 
 export function FileGallery() {
-  const { viewMode, itemsPerPage, setItemsPerPage, currentPage, setCurrentPage } = useFileUIStore();
+  const viewMode = useActiveViewMode();
+  const { itemsPerPage, setItemsPerPage, currentPage, setCurrentPage } = useFileUIStore();
   const { fetchNextPage } = useFileDataStore();
   const { searchQuery, filterLiked, filterTags, filterDateRange } = useFileQueryStore();
   const files = useFilteredFiles();

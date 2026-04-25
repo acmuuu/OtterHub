@@ -6,8 +6,55 @@ import { FileType } from "@shared/types";
 import { storeKey } from "..";
 import { useMemo } from "react";
 
+const DEFAULT_VIEW_MODE_BY_TYPE: Record<FileType, ViewMode> = {
+  [FileType.Image]: ViewMode.Grid,
+  [FileType.Audio]: ViewMode.Grid,
+  [FileType.Video]: ViewMode.Grid,
+  [FileType.Document]: ViewMode.Grid,
+  [FileType.Trash]: ViewMode.Grid,
+};
+
+type PersistedFileUIState = {
+  viewModeByType: Record<FileType, ViewMode>;
+  itemsPerPage: number;
+  sortType: SortType;
+  sortOrder: SortOrder;
+  fabPosition: { x: number; y: number };
+};
+
+function normalizeViewModeForType(type: FileType, mode: ViewMode) {
+  return type === FileType.Image || mode !== ViewMode.Masonry
+    ? mode
+    : ViewMode.Grid;
+}
+
+function createViewModeByType(
+  viewModeByType?: Partial<Record<FileType, ViewMode>>,
+  legacyViewMode?: ViewMode,
+) {
+  const base =
+    legacyViewMode === undefined
+      ? DEFAULT_VIEW_MODE_BY_TYPE
+      : (Object.fromEntries(
+          Object.values(FileType).map((type) => [
+            type,
+            normalizeViewModeForType(type, legacyViewMode),
+          ]),
+        ) as Record<FileType, ViewMode>);
+
+  return Object.fromEntries(
+    Object.values(FileType).map((type) => [
+      type,
+      normalizeViewModeForType(
+        type,
+        viewModeByType?.[type] ?? base[type] ?? ViewMode.Grid,
+      ),
+    ]),
+  ) as Record<FileType, ViewMode>;
+}
+
 interface FileUIState {
-  viewMode: ViewMode;
+  viewModeByType: Record<FileType, ViewMode>;
   itemsPerPage: number;
   currentPage: number;
   sortType: SortType;
@@ -38,8 +85,8 @@ interface FileUIState {
 
 export const useFileUIStore = create<FileUIState>()(
   persist(
-    (set, get) => ({
-      viewMode: ViewMode.Grid,
+    (set) => ({
+      viewModeByType: DEFAULT_VIEW_MODE_BY_TYPE,
       itemsPerPage: 20,
       currentPage: 0,
       sortType: SortType.UploadedAt,
@@ -57,7 +104,16 @@ export const useFileUIStore = create<FileUIState>()(
       forceLoadFiles: [],
 
       setViewMode: (mode) => {
-        set({ viewMode: mode, currentPage: 0 }); // 切换视图模式时重置页码
+        set((state) => {
+          const activeType = useFileDataStore.getState().activeType;
+          return {
+            viewModeByType: {
+              ...state.viewModeByType,
+              [activeType]: normalizeViewModeForType(activeType, mode),
+            },
+            currentPage: 0,
+          };
+        }); // 切换视图模式时重置页码
       },
 
       setItemsPerPage: (count) => {
@@ -142,8 +198,26 @@ export const useFileUIStore = create<FileUIState>()(
     }),
     {
       name: storeKey.FileUI,
-      partialize: (state) => ({
-        viewMode: state.viewMode,
+      version: 1,
+      migrate: (persistedState): PersistedFileUIState => {
+        const state = persistedState as Partial<PersistedFileUIState> & {
+          viewMode?: ViewMode;
+          viewModeByType?: Partial<Record<FileType, ViewMode>>;
+        };
+
+        return {
+          viewModeByType: createViewModeByType(
+            state.viewModeByType,
+            state.viewMode,
+          ),
+          itemsPerPage: state.itemsPerPage ?? 20,
+          sortType: state.sortType ?? SortType.UploadedAt,
+          sortOrder: state.sortOrder ?? SortOrder.Desc,
+          fabPosition: state.fabPosition ?? { x: 32, y: 32 },
+        };
+      },
+      partialize: (state): PersistedFileUIState => ({
+        viewModeByType: state.viewModeByType,
         itemsPerPage: state.itemsPerPage,
         sortType: state.sortType,
         sortOrder: state.sortOrder,
@@ -152,6 +226,15 @@ export const useFileUIStore = create<FileUIState>()(
     }
   )
 );
+
+export const useActiveViewMode = () => {
+  const activeType = useFileDataStore((s) => s.activeType);
+  const viewModeByType = useFileUIStore((s) => s.viewModeByType);
+  return normalizeViewModeForType(
+    activeType,
+    viewModeByType[activeType] ?? ViewMode.Grid,
+  );
+};
 
 export const useActiveSelectedKeys = () => {
   const activeType = useFileDataStore((s) => s.activeType);

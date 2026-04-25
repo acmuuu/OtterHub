@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   ListFilesRequest,
-  ViewMode,
 } from "@/lib/types";
 import { getFileList } from "@/lib/api";
 import { getFileTypeFromKey } from "@/lib/utils/file";
@@ -66,11 +65,6 @@ export const useFileDataStore = create<FileDataState>()(
       },
 
       setActiveType: async (type) => {
-        const { activeType } = get();
-        const { viewMode } = useFileUIStore.getState();
-        if (activeType === FileType.Image && type !== FileType.Image && viewMode === ViewMode.Masonry) {
-          useFileUIStore.setState({ viewMode: ViewMode.Grid });
-        }
         set({ activeType: type });
 
         // 如果从未加载过数据，触发一次分页加载

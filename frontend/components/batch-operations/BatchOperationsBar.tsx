@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useFileDataStore, useFilteredFiles, useFileBuckets } from "@/stores/file";
-import { useFileUIStore, useActiveSelectedKeys, useTotalSelectedKeys, useSelectedStats, clearAllSelection, removeSelectionFromAllTypes } from "@/stores/file";
+import { useFileUIStore, useActiveSelectedKeys, useTotalSelectedKeys, useSelectedStats, useActiveViewMode, clearAllSelection, removeSelectionFromAllTypes } from "@/stores/file";
 import { getFileDownloadUrl, getFileUrl, moveToTrash, deleteFile } from "@/lib/api";
 import { downloadFile, downloadFiles, processBatch, type DirectoryHandleResult } from "@/lib/utils";
 import { ViewMode } from "@/lib/types";
@@ -54,10 +54,10 @@ export function BatchOperationsBar() {
     clearSelection,
     addSelection,
     removeSelection,
-    viewMode,
     currentPage,
     itemsPerPage,
   } = useFileUIStore();
+  const viewMode = useActiveViewMode();
 
   // ===== 跨类型选中管理 =====
   const activeSelectedKeys = useActiveSelectedKeys();

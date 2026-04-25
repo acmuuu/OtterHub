@@ -9,8 +9,8 @@ import { EmptyState } from "./EmptyState";
 import {
   useActiveItems,
   useFileDataStore,
-  useFileUIStore,
   useHasAnySelection,
+  useActiveViewMode,
 } from "@/stores/file";
 import { ViewMode } from "@/lib/types";
 import { Footer } from "@/components/layout/Footer";
@@ -49,7 +49,7 @@ export function HomePageView() {
   const hasAnySelection = useHasAnySelection();
 
   const { fetchNextPage } = useFileDataStore();
-  const { viewMode } = useFileUIStore();
+  const viewMode = useActiveViewMode();
 
   const isListOrGrid = [ViewMode.Grid, ViewMode.List].includes(viewMode);
 

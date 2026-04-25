@@ -3,13 +3,14 @@
 import { Grid3x3, LayoutTemplate, List } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useFileDataStore } from "@/stores/file"
-import { useFileUIStore } from "@/stores/file"
+import { useActiveViewMode, useFileUIStore } from "@/stores/file"
 import { cn } from "@/lib/utils"
 import { ViewMode } from "@/lib/types"
 import { FileType } from "@shared/types"
 
 export function ViewModeToggle() {
-  const { viewMode, setViewMode } = useFileUIStore()
+  const viewMode = useActiveViewMode()
+  const setViewMode = useFileUIStore((state) => state.setViewMode)
   const activeType = useFileDataStore((state) => state.activeType)
 
   return (
