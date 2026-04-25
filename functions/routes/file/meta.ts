@@ -6,6 +6,7 @@ import { authMiddleware } from '../../middleware/auth';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
 import { upsertFileIndex } from '@utils/file-index';
+import { DBAdapterFactory } from '@utils/db-adapter';
 
 export const metaRoutes = new Hono<{ Bindings: Env }>();
 
@@ -24,9 +25,12 @@ metaRoutes.patch(
     const key = c.req.param('key');
     const { fileName, tags, desc } = c.req.valid('json');
     const kv = c.env.oh_file_url;
+    const db = DBAdapterFactory.getAdapter(c.env);
 
     try {
-      const { value, metadata } = await kv.getWithMetadata<FileMetadata>(key);
+      const item = await db.getFileMetadataWithValue(key);
+      const value = item?.value ?? "";
+      const metadata = item?.metadata;
 
       if (!metadata) {
         return fail(c, `File metadata not found for key: ${key}`, 404);

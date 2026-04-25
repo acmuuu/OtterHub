@@ -20,3 +20,15 @@ CREATE INDEX IF NOT EXISTS idx_files_trash_uploaded
 ON files(deleted_at DESC, uploaded_at DESC, key DESC)
 WHERE deleted_at IS NOT NULL;
 
+CREATE INDEX IF NOT EXISTS idx_files_active_type_size
+ON files(file_type, file_size DESC, key DESC)
+WHERE deleted_at IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_files_active_type_name
+ON files(file_type, file_name COLLATE NOCASE ASC, key ASC)
+WHERE deleted_at IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_files_active_type_liked
+ON files(file_type, liked, uploaded_at DESC, key DESC)
+WHERE deleted_at IS NULL;
+

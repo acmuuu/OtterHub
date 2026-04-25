@@ -1,6 +1,6 @@
 import { FileMetadata, MAX_DESC_LENGTH } from "@shared/types";
 import { buildTgFileUrl, getTgFilePath } from "@utils/db-adapter/tg-tools";
-import { upsertFileIndex } from "@utils/file-index";
+import { getIndexedFileMetadataWithValue, upsertFileIndex } from "@utils/file-index";
 import type { Env } from "../../types/hono";
 
 type WorkersAI = {
@@ -146,7 +146,9 @@ export async function analyzeImageAndEnrich(
     const desc = normalizeDesc(extractImageDesc(result));
     if (!desc) return;
 
-    const latest = await kv.getWithMetadata<FileMetadata>(key);
+    const latest =
+      await getIndexedFileMetadataWithValue(env as Env, key) ??
+      await kv.getWithMetadata<FileMetadata>(key);
     if (!latest?.metadata) {
       console.warn(`[AI] Skip enrich for missing key: ${key}`);
       return;

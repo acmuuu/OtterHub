@@ -38,13 +38,12 @@ listRoutes.get(
       if (c.env.oh_file_db) {
         try {
           const indexed = await listIndexedFiles(c.env, { limit, cursor, fileType });
-          if (indexed && (indexed.keys.length > 0 || cursor)) {
+          if (indexed) {
             return c.json({
               success: true,
               data: indexed,
             });
           }
-          console.warn("[D1:list] empty first page, fallback to KV list");
         } catch (err) {
           console.warn("[D1:list] fallback to KV list:", err);
         }

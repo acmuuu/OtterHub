@@ -65,8 +65,9 @@ chunkUploadRoutes.get(
     const { key } = c.req.valid('query');
 
     try {
-      const kv = c.env.oh_file_url;
-      const { value, metadata } = await kv.getWithMetadata<FileMetadata>(key);
+      const db = DBAdapterFactory.getAdapter(c.env);
+      const item = await db.getFileMetadataWithValue(key);
+      const metadata = item?.metadata;
 
       if (!metadata?.chunkInfo) {
         return fail(c, 'Not a chunked file', 400);

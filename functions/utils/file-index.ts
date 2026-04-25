@@ -32,6 +32,7 @@ type BackfillOptions = {
 };
 
 const FILE_TYPES = new Set<string>(Object.values(FileType));
+let schemaReady = false;
 
 function getD1(env: Env) {
   return env.oh_file_db;
@@ -76,8 +77,8 @@ function toFileIndexRow(
   };
 }
 
-function rowToFileItem(row: FileIndexRow): FileItem {
-  const metadata: FileMetadata = {
+function rowToMetadata(row: FileIndexRow): FileMetadata {
+  return {
     fileName: row.file_name,
     fileSize: row.file_size,
     uploadedAt: row.uploaded_at,
@@ -87,6 +88,10 @@ function rowToFileItem(row: FileIndexRow): FileItem {
     thumbUrl: row.thumb_url ?? undefined,
     chunkInfo: row.chunk_info_json ? JSON.parse(row.chunk_info_json) : undefined,
   };
+}
+
+function rowToFileItem(row: FileIndexRow): FileItem {
+  const metadata = rowToMetadata(row);
 
   return {
     name: row.key,
@@ -114,6 +119,7 @@ function decodeCursor(cursor?: string): DecodedCursor | null {
 export async function ensureFileIndexSchema(env: Env) {
   const db = getD1(env);
   if (!db) return false;
+  if (schemaReady) return true;
 
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS files (
@@ -143,6 +149,25 @@ export async function ensureFileIndexSchema(env: Env) {
     WHERE deleted_at IS NOT NULL
   `).run();
 
+  await db.prepare(`
+    CREATE INDEX IF NOT EXISTS idx_files_active_type_size
+    ON files(file_type, file_size DESC, key DESC)
+    WHERE deleted_at IS NULL
+  `).run();
+
+  await db.prepare(`
+    CREATE INDEX IF NOT EXISTS idx_files_active_type_name
+    ON files(file_type, file_name COLLATE NOCASE ASC, key ASC)
+    WHERE deleted_at IS NULL
+  `).run();
+
+  await db.prepare(`
+    CREATE INDEX IF NOT EXISTS idx_files_active_type_liked
+    ON files(file_type, liked, uploaded_at DESC, key DESC)
+    WHERE deleted_at IS NULL
+  `).run();
+
+  schemaReady = true;
   return true;
 }
 
@@ -215,6 +240,30 @@ export async function deleteFileIndex(env: Env, key: string) {
     await db.prepare("DELETE FROM files WHERE key = ?").bind(key).run();
   } catch (error) {
     console.warn(`[D1:index] delete failed for ${key}:`, error);
+  }
+}
+
+export async function getIndexedFileMetadataWithValue(env: Env, key: string) {
+  const db = getD1(env);
+  if (!db) return null;
+
+  try {
+    await ensureFileIndexSchema(env);
+    const row = await db.prepare("SELECT * FROM files WHERE key = ?")
+      .bind(key)
+      .first<FileIndexRow>();
+
+    if (!row) return null;
+
+    const value = await env.oh_file_url.get(key);
+
+    return {
+      metadata: rowToMetadata(row),
+      value: value ?? null,
+    };
+  } catch (error) {
+    console.warn(`[D1:index] read failed for ${key}:`, error);
+    return null;
   }
 }
 

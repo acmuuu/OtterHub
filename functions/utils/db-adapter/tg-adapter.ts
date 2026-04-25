@@ -238,9 +238,10 @@ export class TGAdapter extends BaseAdapter {
 
   async get(key: string, req?: Request): Promise<Response> {
     const { fileId, isChunk } = getFileIdFromKey(key);
-    const kv = this.env[this.kvName];
-    // 优先获取 Metadata 判断文件类型
-    const { value, metadata } = await kv.getWithMetadata(key);
+    // 优先从 D1 获取 metadata，KV value 仅用于兼容分片文件的 chunks 数据。
+    const item = await this.getFileMetadataWithValue(key);
+    const value = item?.value ?? null;
+    const metadata = item?.metadata;
 
     if (!metadata) {
       return failResponse(`Metadata not found for key: ${key}`, 404);

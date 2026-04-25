@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { FileMetadata } from '@shared/types';
 import { authMiddleware } from '../../middleware/auth';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { deleteCache, deleteFileCache } from '@utils/cache';
@@ -16,9 +15,12 @@ actionRoutes.post(
   async (c) => {
     const key = c.req.param('key');
     const kv = c.env.oh_file_url;
+    const db = DBAdapterFactory.getAdapter(c.env);
 
     try {
-      const { value, metadata } = await kv.getWithMetadata<FileMetadata>(key);
+      const item = await db.getFileMetadataWithValue(key);
+      const value = item?.value ?? "";
+      const metadata = item?.metadata;
 
       if (!metadata) {
         return fail(c, `File metadata not found for key: ${key}`, 404);

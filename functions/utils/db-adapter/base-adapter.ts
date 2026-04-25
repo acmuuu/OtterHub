@@ -4,7 +4,7 @@ import { extractKeyFromTrash, isUploadedChunk, streamToBlob } from "./shared-uti
 import { getUniqueFileId } from "../file";
 import { TEMP_CHUNK_TTL } from "types";
 import { TRASH_EXPIRATION_TTL } from "@shared/types";
-import { moveFileIndexToTrash, restoreFileIndexFromTrash, upsertFileIndex } from "@utils/file-index";
+import { getIndexedFileMetadataWithValue, moveFileIndexToTrash, restoreFileIndexFromTrash, upsertFileIndex } from "@utils/file-index";
 /**
  * 存储适配器基类
  * 提供通用的分片文件处理逻辑
@@ -63,11 +63,12 @@ export abstract class BaseAdapter implements DBAdapter {
    */
   async restoreFromTrash(trashKey: string): Promise<void> {
     const kv = this.env[this.kvName];
-    const { value, metadata } = await kv.getWithMetadata(trashKey);
-    if (!metadata) {
+    const item = await this.getFileMetadataWithValue(trashKey);
+    if (!item?.metadata) {
       throw new Error("File not found in trash");
     }
 
+    const { value, metadata } = item;
     const originalKey = extractKeyFromTrash(trashKey);
 
     await kv.put(originalKey, value || "", { metadata });
@@ -280,7 +281,15 @@ export abstract class BaseAdapter implements DBAdapter {
     value: string | null;
   } | null> {
     try {
+      const indexed = await getIndexedFileMetadataWithValue(this.env, key);
+      if (indexed?.metadata) {
+        return indexed;
+      }
+
       const item = await this.env[this.kvName].getWithMetadata(key);
+      if (!item?.metadata) {
+        return null;
+      }
       return { metadata: item.metadata, value: item.value };
     } catch (error) {
       console.error(`[getMetadata] Error for key ${key}:`, error);
