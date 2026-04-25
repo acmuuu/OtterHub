@@ -1,6 +1,6 @@
 "use client";
 
-import { ImageIcon, Music, Video, FileText, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,20 +9,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useFileDataStore } from "@/stores/file";
-import { FileType } from "@shared/types";
+import { cn } from "@/lib/utils";
+import { FILE_TYPE_FILTER_OPTIONS } from "@/lib/file-type-options";
 
-const fileTypes = [
-  { id: FileType.Image, label: "Images", icon: ImageIcon },
-  { id: FileType.Audio, label: "Audio", icon: Music },
-  { id: FileType.Video, label: "Videos", icon: Video },
-  { id: FileType.Document, label: "Documents", icon: FileText },
-];
+type FileTypeDropdownProps = {
+  /** 紧凑行高（如矮 header） */
+  compact?: boolean;
+};
 
-export function FileTypeDropdown() {
+export function FileTypeDropdown({ compact = false }: FileTypeDropdownProps) {
   const activeType = useFileDataStore((s) => s.activeType);
   const setActiveType = useFileDataStore((s) => s.setActiveType);
 
-  const currentType = fileTypes.find((type) => type.id === activeType);
+  const currentType = FILE_TYPE_FILTER_OPTIONS.find((type) => type.id === activeType);
 
   return (
     <DropdownMenu>
@@ -30,19 +29,18 @@ export function FileTypeDropdown() {
         <Button
           variant="ghost"
           size="sm"
-          className="
-            gap-2
-            text-foreground/80
-            hover:text-foreground
-            hover:bg-secondary/60
-            data-[state=open]:bg-secondary/60
-          "
+          className={cn(
+            "text-foreground/80 hover:text-foreground hover:bg-secondary/60 data-[state=open]:bg-secondary/60",
+            compact ? "h-6 gap-1 px-1.5 text-xs py-0" : "gap-2",
+          )}
         >
           {currentType?.icon && (
-            <currentType.icon className="text-foreground/80 h-4 w-4" />
+            <currentType.icon
+              className={cn("text-foreground/80", compact ? "h-3 w-3" : "h-4 w-4")}
+            />
           )}
           {currentType?.label}
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown className={compact ? "h-3 w-3" : "h-4 w-4"} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -56,7 +54,7 @@ export function FileTypeDropdown() {
           shadow-lg
         "
       >
-        {fileTypes.map((type) => {
+        {FILE_TYPE_FILTER_OPTIONS.map((type) => {
           const Icon = type.icon;
 
           return (

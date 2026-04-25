@@ -24,8 +24,8 @@ function FileViewRenderer({
 }) {
   if (viewMode === ViewMode.Grid) {
     return (
-      // 100%缩放时每行5个文件
-      <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
+      {/* 约 70% 基准宽（较原 320px 缩小约 30%），同屏可排更多列 */}
+      <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(224px,1fr))]">
         {files.map((file) => (
           <FileCard key={file.name} file={file} />
         ))}

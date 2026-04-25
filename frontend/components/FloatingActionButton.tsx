@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Settings, Menu, X, Trash2 } from "lucide-react";
+import { LogOut, Settings, Menu, X, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { logout } from "@/lib/api";
@@ -11,11 +11,15 @@ import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useFileUIStore } from "@/stores/file";
 
+type FloatingActionButtonProps = {
+  onUploadClick: () => void;
+};
+
 /**
  * 悬浮操作按钮组件 (FAB)
  * 采用弧形展开动画，提供快捷操作入口，支持拖拽位置持久化
  */
-export function FloatingActionButton() {
+export function FloatingActionButton({ onUploadClick }: FloatingActionButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -107,6 +111,13 @@ export function FloatingActionButton() {
   };
 
   const actions = [
+    {
+      id: "upload",
+      icon: <Upload className="h-5 w-5" />,
+      label: "上传文件",
+      onClick: onUploadClick,
+      className: "bg-emerald-500/90 text-white hover:bg-emerald-600 shadow-emerald-500/20",
+    },
     {
       id: "logout",
       icon: <LogOut className="h-5 w-5" />,

@@ -11,10 +11,11 @@ interface MasonryGridProps {
   overscanBy?: number;
 }
 
+/** 较原尺寸约 0.7 倍，预览卡片约小 30% */
 const RESPONSIVE_COLUMN_WIDTHS = {
-  mobile: 180, // < 640px
-  tablet: 240, // 640px - 1024px
-  desktop: 300, // > 1024px
+  mobile: 126, // < 640px
+  tablet: 168, // 640px - 1024px
+  desktop: 210, // > 1024px
 } as const;
 
 export function MasonryGrid({
@@ -56,8 +57,8 @@ export function MasonryGrid({
       columnWidth={columnWidth}
       columnGutter={columnGutter}
       overscanBy={overscanBy}
-      maxColumnWidth={400}
-      itemHeightEstimate={300}
+      maxColumnWidth={280}
+      itemHeightEstimate={210}
     />
   );
 }

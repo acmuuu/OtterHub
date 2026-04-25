@@ -15,8 +15,20 @@ import { ViewMode } from "@/lib/types";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { cn } from "@/lib/utils";
 
 export default function OtterHubPage() {
+  const {
+    fileInputRef,
+    uploadProgress,
+    isFileDrag,
+    openFileDialog,
+    onInputChange,
+    onMainDragOver,
+    onMainDragLeave,
+    onMainDrop,
+  } = useFileUpload();
   const activeItems = useActiveItems();
   const hasAnySelection = useHasAnySelection();
 
@@ -40,15 +52,32 @@ export default function OtterHubPage() {
       <div className="relative z-10 flex min-h-screen flex-col">
         <Header />
 
-        <main className="flex-1 p-6 md:p-8">
-          <FileUploadZone />
+        <main
+          className={cn(
+            "flex-1 p-6 md:p-8 transition-[box-shadow] rounded-none",
+            isFileDrag &&
+              "ring-2 ring-dashed ring-primary/60 ring-inset bg-primary/5",
+          )}
+          onDragOver={onMainDragOver}
+          onDragLeave={onMainDragLeave}
+          onDrop={onMainDrop}
+        >
+          <FileUploadZone uploadProgress={uploadProgress} />
 
           {isEmpty ? <EmptyState /> : <FileGallery />}
         </main>
 
         {showBatchBar && <BatchOperationsBar />}
 
-        <FloatingActionButton />
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={onInputChange}
+        />
+
+        <FloatingActionButton onUploadClick={openFileDialog} />
 
         <Footer />
       </div>
