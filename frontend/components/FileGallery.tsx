@@ -23,8 +23,8 @@ function FileViewRenderer({
   files: any[];
 }) {
   if (viewMode === ViewMode.Grid) {
+    // 约 70% 基准宽（较原 320px 缩小约 30%），同屏可排更多列
     return (
-      {/* 约 70% 基准宽（较原 320px 缩小约 30%），同屏可排更多列 */}
       <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(224px,1fr))]">
         {files.map((file) => (
           <FileCard key={file.name} file={file} />
