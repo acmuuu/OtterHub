@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Search, X, Settings2 } from "lucide-react";
 import { useFileQueryStore } from "@/stores/file";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -8,11 +9,7 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { FileTypeDropdown } from "./FileTypeDropdown";
 import { FileTypeTabs } from "./FileTypeTabs";
-import { ImageLoadModeToggle } from "./ImageLoadModeToggle";
-import { SafeModeToggle } from "./SafeModeToggle";
-import { ThemeToggle } from "./ThemeToggle";
 import { Input } from "./ui/input";
-import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import { APP_NAME, APP_CATEGORY } from "@/lib/ui-text";
 import { cn } from "@/lib/utils";
 
@@ -73,34 +70,11 @@ export function Header() {
               <div className="flex items-center gap-0.5 shrink-0">
                 <FileTypeDropdown compact />
                 <Button variant="ghost" size="icon" onClick={() => setShowMobileSearch(true)} className="h-6 w-6 text-foreground/70 rounded-lg p-0"><Search className="h-3.5 w-3.5" /></Button>
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-foreground/70 rounded-lg p-0"><Settings2 className="h-3.5 w-3.5" /></Button>
-                  </SheetTrigger>
-                  <SheetContent side="bottom" className="rounded-t-[2.5rem] border-glass-border bg-popover/95 backdrop-blur-2xl pb-12 px-8">
-                    <SheetHeader className="mb-2 pt-2">
-                      <div className="mx-auto w-12 h-1.5 rounded-full bg-foreground/10 mb-6" />
-                      <SheetTitle className="text-xl font-bold text-foreground flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-primary/10"><Settings2 className="h-5 w-5 text-primary" /></div>
-                        偏好设置
-                      </SheetTitle>
-                    </SheetHeader>
-                    <div className="space-y-8">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1"><p className="text-base font-semibold text-foreground">安全模式</p><p className="text-xs text-foreground/50">遮罩敏感内容 (NSFW)</p></div>
-                        <SafeModeToggle />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1"><p className="text-base font-semibold text-foreground">图片加载</p><p className="text-xs text-foreground/50">根据网络自动调整质量</p></div>
-                        <ImageLoadModeToggle />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1"><p className="text-base font-semibold text-foreground">深色模式</p><p className="text-xs text-foreground/50">随系统自动切换主题</p></div>
-                        <ThemeToggle />
-                      </div>
-                    </div>
-                  </SheetContent>
-                </Sheet>
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-foreground/70 rounded-lg p-0" asChild>
+                  <Link href="/settings" aria-label="偏好设置" prefetch>
+                    <Settings2 className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
               </div>
             </div>
           )}
@@ -158,11 +132,16 @@ export function Header() {
           <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <FileTypeTabs compact />
           </div>
-          <div className="flex shrink-0 items-center gap-0.5 rounded-xl bg-secondary/10 p-0.5 border border-glass-border [&_button]:!h-6 [&_button]:!w-6 [&_button]:!min-h-0 [&_button_svg]:!h-3.5 [&_button_svg]:!w-3.5">
-            <SafeModeToggle />
-            <ImageLoadModeToggle />
-            <ThemeToggle />
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0 text-foreground/70 hover:text-foreground"
+            asChild
+          >
+            <Link href="/settings" aria-label="偏好设置" prefetch>
+              <Settings2 className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
         </div>
       </div>
     </header>

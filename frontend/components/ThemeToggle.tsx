@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -11,16 +12,26 @@ import {
 import { useTheme } from "next-themes"
 
 export function ThemeToggle() {
+  const [mounted, setMounted] = useState(false)
   const { resolvedTheme, setTheme } = useTheme()
 
-  // resolvedTheme 在 SSR 时为 undefined，作为 hydration 保护信号
-  if (!resolvedTheme) {
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // 水合前：与客户端首帧一致（固定结构 + 占位 SVG），不依赖 theme、不包 Tooltip
+  if (!mounted || !resolvedTheme) {
     return (
       <Button
         variant="ghost"
         size="icon"
-        className="h-9 w-9 text-foreground/60 hover:text-foreground hover:bg-secondary/50"
-      />
+        className="h-9 w-9 text-foreground/60"
+        disabled
+        aria-label="主题"
+        tabIndex={-1}
+      >
+        <Sun className="h-4 w-4 opacity-0" />
+      </Button>
     )
   }
 
@@ -33,7 +44,7 @@ export function ThemeToggle() {
             size="icon"
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
             className="h-9 w-9 text-foreground/60 hover:text-foreground hover:bg-secondary/50"
-            suppressHydrationWarning
+            aria-label={resolvedTheme === "dark" ? "切换到浅色模式" : "切换到深色模式"}
           >
             {resolvedTheme === "dark" ? (
               <Moon className="h-4 w-4" />
@@ -49,4 +60,3 @@ export function ThemeToggle() {
     </TooltipProvider>
   )
 }
-

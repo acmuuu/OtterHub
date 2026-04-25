@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useResolvedPathname } from "@/hooks/use-resolved-pathname";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +21,7 @@ type FileTypeDropdownProps = {
 
 export function FileTypeDropdown({ compact = false }: FileTypeDropdownProps) {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = useResolvedPathname();
 
   const currentType =
     FILE_TYPE_FILTER_OPTIONS.find(

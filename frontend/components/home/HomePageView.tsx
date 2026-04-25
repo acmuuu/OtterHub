@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect } from "react";
-import { useParams } from "next/navigation";
+import { useResolvedPathname } from "@/hooks/use-resolved-pathname";
 import { FileUploadZone } from "@/components/FileUploadZone";
 import { FileGallery } from "@/components/FileGallery";
 import { BatchOperationsBar } from "@/components/batch-operations/BatchOperationsBar";
@@ -21,10 +21,10 @@ import { cn } from "@/lib/utils";
 import { isValidTypeSegment, pathSegmentToFileType } from "@/lib/file-type-routes";
 
 export function HomePageView() {
-  const params = useParams<{ type: string }>();
+  const pathname = useResolvedPathname();
   const setActiveType = useFileDataStore((s) => s.setActiveType);
 
-  const segment = params.type;
+  const segment = pathname.split("/").filter(Boolean)[0];
 
   // URL 为单一数据源，与 zustand 中 activeType 对齐
   useLayoutEffect(() => {

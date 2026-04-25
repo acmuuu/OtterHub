@@ -12,7 +12,7 @@ interface SettingsUIState {
 export const useUIStore = create<SettingsUIState>()(
   persist(
     (set) => ({
-      activeSettingTab: SettingTab.General,
+      activeSettingTab: SettingTab.Display,
       setActiveSettingTab: (tab) => set({ activeSettingTab: tab }),
     }),
     {

@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { logout } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { TrashSheet } from "./trash/TrashSheet";
-import { SettingsDialog } from "./settings/SettingsDialog";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useFileUIStore } from "@/stores/file";
@@ -22,7 +21,6 @@ type FloatingActionButtonProps = {
 export function FloatingActionButton({ onUploadClick }: FloatingActionButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   // Use store for persistence
   const { fabPosition, setFabPosition } = useFileUIStore();
@@ -129,7 +127,7 @@ export function FloatingActionButton({ onUploadClick }: FloatingActionButtonProp
       id: "settings",
       icon: <Settings className="h-5 w-5" />,
       label: "系统设置",
-      onClick: () => setIsSettingsOpen(true),
+      onClick: () => router.push("/settings"),
       className: "bg-sky-400/90 text-white hover:bg-sky-500 shadow-sky-400/20",
     },
     {
@@ -238,7 +236,6 @@ export function FloatingActionButton({ onUploadClick }: FloatingActionButtonProp
         </div>
       </div>
       <TrashSheet open={isTrashOpen} onOpenChange={setIsTrashOpen} />
-      <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </>
   );
 }

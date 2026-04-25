@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useResolvedPathname } from "@/hooks/use-resolved-pathname";
 import { FILE_TYPE_FILTER_OPTIONS } from "@/lib/file-type-options";
 import { fileTypeToPathSegment } from "@/lib/file-type-routes";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,7 @@ type FileTypeTabsProps = {
 };
 
 export function FileTypeTabs({ compact = false }: FileTypeTabsProps) {
-  const pathname = usePathname();
+  const pathname = useResolvedPathname();
 
   return (
     <div className={compact ? "flex items-center gap-1 flex-nowrap" : "flex items-center gap-2 flex-wrap"}>
