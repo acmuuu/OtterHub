@@ -5,6 +5,7 @@ import { DBAdapterFactory } from '@utils/db-adapter';
 import { deleteCache, deleteFileCache } from '@utils/cache';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
+import { upsertFileIndex } from '@utils/file-index';
 
 export const actionRoutes = new Hono<{ Bindings: Env }>();
 
@@ -25,6 +26,7 @@ actionRoutes.post(
 
       metadata.liked = !metadata.liked;
       await kv.put(key, value, { metadata });
+      await upsertFileIndex(c.env, key, metadata);
 
       return ok(c, { liked: metadata.liked });
     } catch (e: any) {

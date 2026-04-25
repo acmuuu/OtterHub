@@ -7,6 +7,7 @@ import { proxyGet } from '@utils/proxy';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
 import { normalizeUploadTags } from '@utils/upload-tags';
+import { upsertFileIndex } from '@utils/file-index';
 import {
   extractMimeType,
   extractFileNameFromDisposition,
@@ -75,6 +76,7 @@ urlUploadRoutes.post(
         c.executionCtx.waitUntil.bind(c.executionCtx),
         mimeType
       );
+      await upsertFileIndex(c.env, key, metadata);
       return ok(c, { key, fileSize });
     } catch (error: any) {
       console.error('Remote upload error:', error);

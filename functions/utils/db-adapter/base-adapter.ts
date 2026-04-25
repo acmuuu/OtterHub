@@ -4,7 +4,7 @@ import { extractKeyFromTrash, isUploadedChunk, streamToBlob } from "./shared-uti
 import { getUniqueFileId } from "../file";
 import { TEMP_CHUNK_TTL } from "types";
 import { TRASH_EXPIRATION_TTL } from "@shared/types";
-import { fail } from "@utils/response";
+import { moveFileIndexToTrash, restoreFileIndexFromTrash, upsertFileIndex } from "@utils/file-index";
 /**
  * 存储适配器基类
  * 提供通用的分片文件处理逻辑
@@ -54,6 +54,8 @@ export abstract class BaseAdapter implements DBAdapter {
 
     // 从 KV 中删除原文件记录
     await kv.delete(key);
+
+    await moveFileIndexToTrash(this.env, key, trashKey, item.metadata);
   }
 
   /**
@@ -70,6 +72,8 @@ export abstract class BaseAdapter implements DBAdapter {
 
     await kv.put(originalKey, value || "", { metadata });
     await kv.delete(trashKey);
+
+    await restoreFileIndexFromTrash(this.env, trashKey, originalKey, metadata);
   }
 
   /**
@@ -342,6 +346,7 @@ export abstract class BaseAdapter implements DBAdapter {
 
         // 5. 写回 KV
         await kv.put(key, JSON.stringify(chunks), { metadata });
+        await upsertFileIndex(this.env, key, metadata);
 
         console.log(
           `[updateChunkInfo] Updated chunk ${chunkIndex} (attempt ${i + 1})`,

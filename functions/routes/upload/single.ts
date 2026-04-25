@@ -4,6 +4,7 @@ import { DBAdapterFactory } from '@utils/db-adapter';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
 import { normalizeUploadTags, parseUploadTags } from '@utils/upload-tags';
+import { upsertFileIndex } from '@utils/file-index';
 
 export const singleUploadRoutes = new Hono<{ Bindings: Env }>();
 
@@ -32,6 +33,7 @@ singleUploadRoutes.post('/', async (c) => {
     };
 
     const { key } = await dbAdapter.uploadFile(uploadFile, metadata, c.executionCtx.waitUntil.bind(c.executionCtx));
+    await upsertFileIndex(c.env, key, metadata);
     return ok(c, key);
   } catch (error: any) {
     console.error('Upload error:', error);

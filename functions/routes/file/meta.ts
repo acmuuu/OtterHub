@@ -5,6 +5,7 @@ import { FileMetadata, FileTag, MAX_FILENAME_LENGTH, MAX_DESC_LENGTH } from '@sh
 import { authMiddleware } from '../../middleware/auth';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
+import { upsertFileIndex } from '@utils/file-index';
 
 export const metaRoutes = new Hono<{ Bindings: Env }>();
 
@@ -36,6 +37,7 @@ metaRoutes.patch(
       if (desc !== undefined) metadata.desc = desc;
 
       await kv.put(key, value, { metadata });
+      await upsertFileIndex(c.env, key, metadata);
 
       return ok(c, metadata);
     } catch (e: any) {

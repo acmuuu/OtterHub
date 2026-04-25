@@ -5,6 +5,7 @@ import { FileType } from '@shared/types';
 import type { Env } from '../../types/hono';
 import { fail } from '@utils/response';
 import { authMiddleware } from 'middleware/auth';
+import { listIndexedFiles } from '@utils/file-index';
 
 export const listRoutes = new Hono<{ Bindings: Env }>();
 
@@ -34,6 +35,21 @@ listRoutes.get(
     };
 
     try {
+      if (c.env.oh_file_db) {
+        try {
+          const indexed = await listIndexedFiles(c.env, { limit, cursor, fileType });
+          if (indexed && (indexed.keys.length > 0 || cursor)) {
+            return c.json({
+              success: true,
+              data: indexed,
+            });
+          }
+          console.warn("[D1:list] empty first page, fallback to KV list");
+        } catch (err) {
+          console.warn("[D1:list] fallback to KV list:", err);
+        }
+      }
+
       const result = await kv.list(options);
       return c.json({
         success: true,

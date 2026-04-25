@@ -19,6 +19,7 @@ import {
   validateChunksForMerge,
 } from "./shared-utils";
 import { failResponse } from "@utils/response";
+import { deleteFileIndex } from "@utils/file-index";
 
 // R2存储适配器实现
 export class R2Adapter extends BaseAdapter {
@@ -386,6 +387,7 @@ export class R2Adapter extends BaseAdapter {
 
       // 从KV存储中删除文件信息
       await this.env[this.kvName].delete(key);
+      await deleteFileIndex(this.env, key);
 
       return { isDeleted: true };
     } catch (error) {

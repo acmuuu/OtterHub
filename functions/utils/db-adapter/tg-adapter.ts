@@ -29,6 +29,7 @@ import {
 
 import { MAX_CHUNK_SIZE } from "@shared/types";
 import { analyzeImageAndEnrich, isSupportedImage } from "../ai/image-analysis";
+import { deleteFileIndex } from "@utils/file-index";
 
 // Telegram存储适配器实现
 export class TGAdapter extends BaseAdapter {
@@ -498,6 +499,7 @@ export class TGAdapter extends BaseAdapter {
       // Telegram API不支持直接删除文件
       // 只从KV存储中删除文件信息
       await this.env[this.kvName].delete(key);
+      await deleteFileIndex(this.env, key);
 
       return { isDeleted: true };
     } catch (error) {

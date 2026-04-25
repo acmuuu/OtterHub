@@ -14,6 +14,17 @@ export interface R2Bucket {
   delete(key: string): Promise<void>;
 }
 
+export interface D1PreparedStatement {
+  bind(...values: any[]): D1PreparedStatement;
+  first<T = Record<string, unknown>>(): Promise<T | null>;
+  all<T = Record<string, unknown>>(): Promise<{ results?: T[] }>;
+  run(): Promise<any>;
+}
+
+export interface D1Database {
+  prepare(query: string): D1PreparedStatement;
+}
+
 /** Cloudflare Workers AI binding（在 Pages Functions Bindings 面板中配置，变量名为 AI） */
 export interface WorkersAI {
   run(model: string, inputs: Record<string, any>): Promise<any>;
@@ -22,6 +33,7 @@ export interface WorkersAI {
 export type Env = {
   oh_file_url: KVNamespace;
   oh_file_r2?: R2Bucket;
+  oh_file_db?: D1Database;
   JWT_SECRET?: string;
   PASSWORD?: string;
   API_TOKEN?: string;

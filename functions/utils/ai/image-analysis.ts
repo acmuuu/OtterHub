@@ -1,5 +1,7 @@
 import { FileMetadata, MAX_DESC_LENGTH } from "@shared/types";
 import { buildTgFileUrl, getTgFilePath } from "@utils/db-adapter/tg-tools";
+import { upsertFileIndex } from "@utils/file-index";
+import type { Env } from "../../types/hono";
 
 type WorkersAI = {
   run(model: string, inputs: Record<string, unknown>): Promise<unknown>;
@@ -9,6 +11,7 @@ type AIEnv = {
   AI?: WorkersAI;
   TG_BOT_TOKEN?: string;
   TG_CHAT_ID?: string;
+  oh_file_db?: unknown;
 };
 
 type KVWithMetadata = {
@@ -156,6 +159,7 @@ export async function analyzeImageAndEnrich(
     };
 
     await kv.put(key, latest.value ?? "", { metadata: updatedMeta });
+    await upsertFileIndex(env as Env, key, updatedMeta);
 
     // 可选：通知 TG
     // if (env.TG_BOT_TOKEN && env.TG_CHAT_ID) {

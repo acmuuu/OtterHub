@@ -4,6 +4,7 @@
 export enum CF {
   KV_NAME = 'oh_file_url',
   R2_BUCKET = 'oh_file_r2',
+  D1_DATABASE = 'oh_file_db',
 
   // KV key
   SETTINGS_KEY = 'oh_settings', //  通用设置

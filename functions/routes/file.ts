@@ -6,11 +6,13 @@ import { thumbRoutes } from './file/thumb';
 import { metaRoutes } from './file/meta';
 import { actionRoutes } from './file/action';
 import { analyzeRoutes } from './file/analyze';
+import { indexMaintenanceRoutes } from './file/index-maintenance';
 import type { Env } from '../types/hono';
 
 export const fileRoutes = new Hono<{ Bindings: Env }>();
 
 fileRoutes.route('/', listRoutes);
+fileRoutes.route('/', indexMaintenanceRoutes);
 fileRoutes.route('/', downloadRoutes);
 fileRoutes.route('/', rawRoutes);
 fileRoutes.route('/', thumbRoutes);
