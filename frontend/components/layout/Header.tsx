@@ -54,7 +54,11 @@ export function Header() {
             </div>
           ) : (
             <div className="flex w-full items-center justify-between animate-in fade-in duration-300">
-              <div className="flex items-center gap-1.5 min-w-0">
+              <Link
+                href="/"
+                aria-label={`${APP_NAME} 首页`}
+                className="flex items-center gap-1.5 min-w-0"
+              >
                 <div className="relative h-6 w-6 shrink-0">
                   <Image
                     src="/otterhub-icon.svg"
@@ -66,7 +70,7 @@ export function Header() {
                   />
                 </div>
                 <span className="text-base font-bold tracking-tight text-foreground truncate leading-none">{APP_NAME}</span>
-              </div>
+              </Link>
               <div className="flex items-center gap-0.5 shrink-0">
                 <FileTypeDropdown compact />
                 <Button variant="ghost" size="icon" onClick={() => setShowMobileSearch(true)} className="h-6 w-6 text-foreground/70 rounded-lg p-0"><Search className="h-3.5 w-3.5" /></Button>
@@ -88,9 +92,10 @@ export function Header() {
     <header className="sticky top-0 z-40 w-full border-b border-glass-border bg-glass-bg/70 backdrop-blur-xl">
       <div className="flex h-[45px] w-full items-center gap-2 px-6 md:px-8">
         {/* Left: Logo */}
-        <div
+        <Link
+          href="/"
+          aria-label={`${APP_NAME} 首页`}
           className="flex items-center gap-2 group cursor-pointer shrink-0 min-w-0"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         >
           <div className="relative h-7 w-7 shrink-0">
             <Image
@@ -106,7 +111,7 @@ export function Header() {
             <h1 className="text-xl font-extrabold tracking-tight text-foreground leading-none">{APP_NAME}</h1>
             <p className="sr-only">{APP_CATEGORY}</p>
           </div>
-        </div>
+        </Link>
 
         {/* 右侧：搜索框 → 类型标签 → 开关 */}
         <div className="flex min-w-0 flex-1 items-center justify-end gap-2 pl-1">

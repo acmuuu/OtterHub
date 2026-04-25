@@ -30,6 +30,17 @@ function mergeByName(local: FileItem[], remote: FileItem[]): FileItem[] {
   return Array.from(map.values());
 }
 
+function mergeUploadedFirst(uploaded: FileItem[], existing: FileItem[]): FileItem[] {
+  const uploadedNames = new Set(uploaded.map((item) => item.name));
+  const sortedUploaded = [...uploaded].sort(
+    (a, b) => (b.metadata?.uploadedAt ?? 0) - (a.metadata?.uploadedAt ?? 0),
+  );
+  return [
+    ...sortedUploaded,
+    ...existing.filter((item) => !uploadedNames.has(item.name)),
+  ];
+}
+
 interface FileDataState {
   activeType: FileType;
   buckets: Record<FileType, FileBucket>;
@@ -40,6 +51,7 @@ interface FileDataState {
   fetchBucket: (type: FileType, query?: FileListQuery) => Promise<void>;
   
   addFileLocal: (file: FileItem, fileType: FileType) => void;
+  addFilesLocal: (files: FileItem[], fileType: FileType) => void;
   deleteFilesLocal: (names: string[]) => void;
   deleteFilesLocalByType: (names: string[], type: FileType) => void;
   moveToTrashLocal: (file: FileItem) => Promise<void>;
@@ -155,12 +167,17 @@ export const useFileDataStore = create<FileDataState>()(
       },
 
       addFileLocal: (file, fileType) => {
+        get().addFilesLocal([file], fileType);
+      },
+
+      addFilesLocal: (files, fileType) => {
+        if (files.length === 0) return;
         set((state) => ({
           buckets: {
             ...state.buckets,
             [fileType]: {
               ...state.buckets[fileType],
-              items: [...state.buckets[fileType].items, file],
+              items: mergeUploadedFirst(files, state.buckets[fileType].items),
             },
           },
         }));

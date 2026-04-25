@@ -15,11 +15,12 @@ import {
   getMissingChunkIndices,
   scanFiles,
 } from "@/lib/utils";
-import { useFileDataStore } from "@/stores/file";
+import { useFileDataStore, useFileUIStore } from "@/stores/file";
 import { nsfwDetector } from "@/lib/nsfw-detector";
 import { toast } from "sonner";
 import {
   FileItem,
+  FileType,
   FileTag,
   MAX_CHUNK_SIZE,
   MAX_FILENAME_LENGTH,
@@ -29,7 +30,8 @@ import { useGeneralSettingsStore } from "@/stores/general-store";
 import { MAX_CONCURRENTS } from "@/lib/types";
 
 export function useFileUpload() {
-  const addFileLocal = useFileDataStore((s) => s.addFileLocal);
+  const addFilesLocal = useFileDataStore((s) => s.addFilesLocal);
+  const setCurrentPage = useFileUIStore((s) => s.setCurrentPage);
   const { nsfwDetection, defaultUploadTags } = useGeneralSettingsStore();
   const [isFileDrag, setIsFileDrag] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
@@ -67,6 +69,13 @@ export function useFileUpload() {
 
       let successCount = 0;
       const failed: string[] = [];
+      const uploadedFilesByType = new Map<FileType, FileItem[]>();
+
+      const queueUploadedFile = (file: FileItem, fileType: FileType) => {
+        const files = uploadedFilesByType.get(fileType) ?? [];
+        files.push(file);
+        uploadedFilesByType.set(fileType, files);
+      };
 
       const uploadNormalFile = async (file: File) => {
         const tmpKey = buildTmpFileKey(file);
@@ -100,7 +109,7 @@ export function useFileUpload() {
             },
           };
 
-          addFileLocal(fileItem, getFileType(file.type, file.name));
+          queueUploadedFile(fileItem, getFileType(file.type, file.name));
           successCount++;
         } catch (err) {
           failed.push(`${file.name}: ${(err as Error).message}`);
@@ -248,7 +257,7 @@ export function useFileUpload() {
             },
           };
 
-          addFileLocal(fileItem, fileType);
+          queueUploadedFile(fileItem, fileType);
           successCount++;
         } catch (err) {
           failed.push(`${file.name}: ${(err as Error).message}`);
@@ -272,6 +281,10 @@ export function useFileUpload() {
       );
 
       if (successCount > 0) {
+        for (const [fileType, files] of uploadedFilesByType) {
+          addFilesLocal(files, fileType);
+        }
+        setCurrentPage(0);
         toast.success(`成功上传 ${successCount} 个文件`);
       }
 
@@ -281,7 +294,7 @@ export function useFileUpload() {
         });
       }
     },
-    [addFileLocal, nsfwDetection, defaultUploadTags],
+    [addFilesLocal, setCurrentPage, nsfwDetection, defaultUploadTags],
   );
 
   const handleFiles = useCallback(

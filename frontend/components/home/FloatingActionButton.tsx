@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Settings, Menu, X, Trash2, Upload } from "lucide-react";
+import { LogOut, Menu, X, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { logout } from "@/lib/api";
@@ -122,13 +122,6 @@ export function FloatingActionButton({ onUploadClick }: FloatingActionButtonProp
       label: "安全退出",
       onClick: handleLogout,
       className: "bg-destructive/90 text-destructive-foreground hover:bg-destructive shadow-destructive/20",
-    },
-    {
-      id: "settings",
-      icon: <Settings className="h-5 w-5" />,
-      label: "系统设置",
-      onClick: () => router.push("/settings"),
-      className: "bg-sky-400/90 text-white hover:bg-sky-500 shadow-sky-400/20",
     },
     {
       id: "trash",
