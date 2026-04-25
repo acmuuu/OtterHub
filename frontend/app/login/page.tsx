@@ -13,6 +13,7 @@ import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Footer } from "@/components/footer";
 import { APP_NAME, APP_TAGLINE } from "@/lib/ui-text";
+import { DEFAULT_FILE_TYPE_PATH } from "@/lib/file-type-routes";
 
 const loginSchema = z.object({
   password: z.string().min(1, "请输入密码"),
@@ -32,7 +33,7 @@ function LoginContent() {
     if (redirect && (redirect.startsWith('/') || redirect.startsWith(window.location.origin))) {
       return redirect;
     }
-    return '/';
+    return `/${DEFAULT_FILE_TYPE_PATH}`;
   };
 
   const form = useForm<LoginFormValues>({

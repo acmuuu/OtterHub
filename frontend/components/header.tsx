@@ -27,7 +27,7 @@ export function Header() {
       <header className="sticky top-0 z-40 w-full border-b border-glass-border bg-glass-bg/80 backdrop-blur-xl">
         <div
           className={cn(
-            "flex items-center px-3",
+            "flex w-full items-center px-6 md:px-8",
             showMobileSearch ? "min-h-[45px] py-0.5" : "h-[45px]",
           )}
         >
@@ -112,7 +112,7 @@ export function Header() {
   // 桌面端头部导航栏
   return (
     <header className="sticky top-0 z-40 w-full border-b border-glass-border bg-glass-bg/70 backdrop-blur-xl">
-      <div className="mx-auto flex h-[45px] max-w-7xl items-center gap-2 px-3 md:px-4">
+      <div className="flex h-[45px] w-full items-center gap-2 px-6 md:px-8">
         {/* Left: Logo */}
         <div
           className="flex items-center gap-2 group cursor-pointer shrink-0 min-w-0"

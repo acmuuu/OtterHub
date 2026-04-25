@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter, usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,9 +9,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useFileDataStore } from "@/stores/file";
 import { cn } from "@/lib/utils";
 import { FILE_TYPE_FILTER_OPTIONS } from "@/lib/file-type-options";
+import { fileTypeToPathSegment } from "@/lib/file-type-routes";
 
 type FileTypeDropdownProps = {
   /** 紧凑行高（如矮 header） */
@@ -18,10 +19,13 @@ type FileTypeDropdownProps = {
 };
 
 export function FileTypeDropdown({ compact = false }: FileTypeDropdownProps) {
-  const activeType = useFileDataStore((s) => s.activeType);
-  const setActiveType = useFileDataStore((s) => s.setActiveType);
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const currentType = FILE_TYPE_FILTER_OPTIONS.find((type) => type.id === activeType);
+  const currentType =
+    FILE_TYPE_FILTER_OPTIONS.find(
+      (t) => `/${fileTypeToPathSegment(t.id)}` === pathname,
+    ) ?? FILE_TYPE_FILTER_OPTIONS[0];
 
   return (
     <DropdownMenu>
@@ -56,11 +60,13 @@ export function FileTypeDropdown({ compact = false }: FileTypeDropdownProps) {
       >
         {FILE_TYPE_FILTER_OPTIONS.map((type) => {
           const Icon = type.icon;
+          const path = fileTypeToPathSegment(type.id);
+          if (!path) return null;
 
           return (
             <DropdownMenuItem
               key={type.id}
-              onClick={() => setActiveType(type.id)}
+              onClick={() => router.push(`/${path}`)}
               className={`
                 flex items-center gap-2
                 rounded-md
@@ -69,7 +75,7 @@ export function FileTypeDropdown({ compact = false }: FileTypeDropdownProps) {
                 transition-colors
 
                 ${
-                  activeType === type.id
+                  pathname === `/${path}`
                     ? "bg-primary/15 text-primary"
                     : "text-foreground/80"
                 }
