@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 import { Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -11,13 +11,26 @@ import {
 } from "@/components/ui/tooltip"
 import { useTheme } from "next-themes"
 
-export function ThemeToggle() {
-  const [mounted, setMounted] = useState(false)
-  const { resolvedTheme, setTheme } = useTheme()
+function subscribeToHydration(onStoreChange: () => void) {
+  onStoreChange()
+  return () => {}
+}
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+function getClientSnapshot() {
+  return true
+}
+
+function getServerSnapshot() {
+  return false
+}
+
+export function ThemeToggle() {
+  const mounted = useSyncExternalStore(
+    subscribeToHydration,
+    getClientSnapshot,
+    getServerSnapshot,
+  )
+  const { resolvedTheme, setTheme } = useTheme()
 
   // 水合前：与客户端首帧一致（固定结构 + 占位 SVG），不依赖 theme、不包 Tooltip
   if (!mounted || !resolvedTheme) {

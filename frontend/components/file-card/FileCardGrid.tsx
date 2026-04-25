@@ -1,6 +1,6 @@
 import { Check, Loader2, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FileTagBadge } from "@/components/FileTagBadge";
+import { FileTagBadge } from "@/components/tags/FileTagBadge";
 import { FileDetailDialog } from "@/components/file-card/FileDetailDialog";
 import { FileActions } from "./FileActions";
 import { FileContent, ICON_DISPLAY_SIZE } from "./FileContent";

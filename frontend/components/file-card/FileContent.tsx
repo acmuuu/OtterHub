@@ -6,7 +6,7 @@ import {
 import { shouldBlur, shouldLoadImage, cn } from "@/lib/utils";
 import { getFileUrl } from "@/lib/api";
 import { FileTag, FileType } from "@shared/types";
-import { FileImagePreview } from "../FileImagePreview";
+import { FileImagePreview } from "./FileImagePreview";
 import { ImageLoadMode } from "@/lib/types";
 import { useGeneralSettingsStore } from "@/stores/general-store";
 

@@ -3,16 +3,16 @@
 import { useActiveBucket, useFilteredFiles, useFileDataStore, useFileQueryStore } from "@/stores/file";
 import { useFileUIStore } from "@/stores/file";
 import { FileCard } from "@/components/file-card";
-import { ViewModeToggle } from "@/components/ViewModeToggle";
-import { SortTypeDropdown } from "@/components/SortTypeDropdown";
-import { FilterDropdown } from "@/components/FilterDropdown";
-import { Pagination } from "@/components/Pagination";
+import { ViewModeToggle } from "./ViewModeToggle";
+import { SortTypeDropdown } from "./SortTypeDropdown";
+import { FilterDropdown } from "./FilterDropdown";
+import { Pagination } from "./Pagination";
 import { ViewMode } from "@/lib/types";
 import { ChevronDown, Loader2, CircleAlert, Ellipsis } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MasonryGrid } from "./masonry/MasonryGrid";
+import { MasonryGrid } from "@/components/masonry/MasonryGrid";
 import { PhotoProvider } from "react-photo-view";
-import { PhotoToolbar } from "./FileImagePreview";
+import { PhotoToolbar } from "@/components/file-card/FileImagePreview";
 import { useEffect } from "react";
 
 function FileViewRenderer({

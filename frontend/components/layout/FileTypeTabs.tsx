@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useResolvedPathname } from "@/hooks/use-resolved-pathname";
 import { FILE_TYPE_FILTER_OPTIONS } from "@/lib/file-type-options";
@@ -35,12 +34,14 @@ export function FileTypeTabs({ compact = false }: FileTypeTabsProps) {
               isActive
                 ? "bg-primary/20 text-primary border border-primary/50"
                 : "text-foreground/80 hover:text-foreground hover:bg-secondary/50",
+              // 覆盖 Button cva 里 [&_svg]:pointer-events-none，避免部分环境点击图标不触发导航
+              "[&_svg]:pointer-events-auto",
             )}
           >
-            <Link href={href} prefetch>
+            <a href={href} className="shrink-0">
               {Icon && <Icon className={compact ? "h-3 w-3 mr-1 shrink-0" : "h-4 w-4 mr-2"} />}
               {type.label}
-            </Link>
+            </a>
           </Button>
         );
       })}

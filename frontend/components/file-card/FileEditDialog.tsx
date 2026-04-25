@@ -7,7 +7,7 @@ import { editMetadata, analyzeImage, getFileUrl } from "@/lib/api";
 import { FileItem, FileTag, MAX_FILENAME_LENGTH, MAX_DESC_LENGTH, FileType } from "@shared/types";
 import { compressImageFromUrl } from "@/lib/utils/file";
 import { Label } from "@radix-ui/react-dropdown-menu";
-import { TagSelector } from "@/components/TagSelector";
+import { TagSelector } from "@/components/tags/TagSelector";
 import {
   Dialog,
   DialogContent,

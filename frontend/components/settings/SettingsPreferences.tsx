@@ -1,8 +1,8 @@
 "use client";
 
-import { SafeModeToggle } from "@/components/SafeModeToggle";
-import { ImageLoadModeToggle } from "@/components/ImageLoadModeToggle";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { SafeModeToggle } from "./SafeModeToggle";
+import { ImageLoadModeToggle } from "./ImageLoadModeToggle";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function SettingsPreferences() {
   return (

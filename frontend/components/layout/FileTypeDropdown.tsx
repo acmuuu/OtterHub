@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useResolvedPathname } from "@/hooks/use-resolved-pathname";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,6 @@ type FileTypeDropdownProps = {
 };
 
 export function FileTypeDropdown({ compact = false }: FileTypeDropdownProps) {
-  const router = useRouter();
   const pathname = useResolvedPathname();
 
   const currentType =
@@ -64,32 +62,23 @@ export function FileTypeDropdown({ compact = false }: FileTypeDropdownProps) {
           const path = fileTypeToPathSegment(type.id);
           if (!path) return null;
 
+          const href = `/${path}`;
+          const isActive = pathname === href;
+
           return (
-            <DropdownMenuItem
-              key={type.id}
-              onClick={() => router.push(`/${path}`)}
-              className={`
-                flex items-center gap-2
-                rounded-md
-                px-2 py-1.5
-                text-sm
-                transition-colors
-
-                ${
-                  pathname === `/${path}`
-                    ? "bg-primary/15 text-primary"
-                    : "text-foreground/80"
-                }
-
-                hover:bg-secondary/60
-                hover:text-foreground
-
-                focus:bg-secondary/60
-                focus:text-foreground
-              `}
-            >
-              <Icon className="h-4 w-4 mr-2 text-foreground/60" />
-              {type.label}
+            <DropdownMenuItem key={type.id} asChild>
+              <a
+                href={href}
+                className={cn(
+                  "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                  isActive ? "bg-primary/15 text-primary" : "text-foreground/80",
+                  "hover:bg-secondary/60 hover:text-foreground",
+                  "focus:bg-secondary/60 focus:text-foreground",
+                )}
+              >
+                <Icon className="h-4 w-4 mr-2 text-foreground/60" />
+                {type.label}
+              </a>
             </DropdownMenuItem>
           );
         })}

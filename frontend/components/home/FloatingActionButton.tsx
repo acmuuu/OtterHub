@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { logout } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import { TrashSheet } from "./trash/TrashSheet";
+import { TrashSheet } from "@/components/trash/TrashSheet";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useFileUIStore } from "@/stores/file";
@@ -194,7 +194,7 @@ export function FloatingActionButton({ onUploadClick }: FloatingActionButtonProp
                   
                   <Button
                     size="icon"
-                    onClick={(e) => {
+                    onClick={() => {
                       if (action.onClick) action.onClick();
                       setIsOpen(false);
                     }}

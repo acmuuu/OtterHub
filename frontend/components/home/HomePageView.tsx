@@ -2,10 +2,10 @@
 
 import { useEffect, useLayoutEffect } from "react";
 import { useResolvedPathname } from "@/hooks/use-resolved-pathname";
-import { FileUploadZone } from "@/components/FileUploadZone";
-import { FileGallery } from "@/components/FileGallery";
+import { FileUploadZone } from "./FileUploadZone";
+import { FileGallery } from "./FileGallery";
 import { BatchOperationsBar } from "@/components/batch-operations/BatchOperationsBar";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "./EmptyState";
 import {
   useActiveItems,
   useFileDataStore,
@@ -13,9 +13,9 @@ import {
   useHasAnySelection,
 } from "@/stores/file";
 import { ViewMode } from "@/lib/types";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
-import { FloatingActionButton } from "@/components/FloatingActionButton";
+import { Footer } from "@/components/layout/Footer";
+import { Header } from "@/components/layout/Header";
+import { FloatingActionButton } from "./FloatingActionButton";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { cn } from "@/lib/utils";
 import { isValidTypeSegment, pathSegmentToFileType } from "@/lib/file-type-routes";

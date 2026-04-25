@@ -1,8 +1,8 @@
 "use client";
 
 import { SystemSettingsView } from "@/components/settings/SystemSettingsView";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 
 export default function SettingsPage() {
   return (

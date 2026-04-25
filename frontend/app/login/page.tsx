@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import Image from "next/image";
 import { login } from "@/lib/api";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Footer } from "@/components/footer";
+import { Footer } from "@/components/layout/Footer";
 import { APP_NAME, APP_TAGLINE } from "@/lib/ui-text";
 import { DEFAULT_FILE_TYPE_PATH } from "@/lib/file-type-routes";
 
@@ -61,8 +62,15 @@ function LoginContent() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center w-full max-w-[320px] z-10 animate-in fade-in zoom-in duration-700">
       <div className="flex flex-col items-center mb-10">
-        <div className="w-20 h-20 rounded-3xl bg-linear-to-br from-primary to-accent flex items-center justify-center text-5xl shadow-2xl shadow-primary/30 mb-6 animate-bounce">
-          🦦
+        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-linear-to-br from-primary/20 to-accent/30 shadow-2xl shadow-primary/25 ring-1 ring-glass-border/50">
+          <Image
+            src="/otterhub-icon.svg"
+            alt=""
+            width={56}
+            height={56}
+            className="object-contain"
+            unoptimized
+          />
         </div>
         <h1 className="text-4xl font-black text-foreground tracking-tighter">{APP_NAME}</h1>
         <p className="text-foreground/50 text-sm font-medium mt-2 tracking-widest uppercase">{APP_TAGLINE}</p>

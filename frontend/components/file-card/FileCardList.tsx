@@ -1,6 +1,6 @@
 import { Loader2, RotateCw, Music, Video, FileText, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FileTagBadge } from "@/components/FileTagBadge";
+import { FileTagBadge } from "@/components/tags/FileTagBadge";
 import { FileDetailDialog } from "@/components/file-card/FileDetailDialog";
 import { FileActions } from "./FileActions";
 import { FileItem, FileType } from "@shared/types";

@@ -6,10 +6,10 @@ import { Search, X, Settings2 } from "lucide-react";
 import { useFileQueryStore } from "@/stores/file";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import { FileTypeDropdown } from "./FileTypeDropdown";
 import { FileTypeTabs } from "./FileTypeTabs";
-import { Input } from "./ui/input";
+import { Input } from "@/components/ui/input";
 import { APP_NAME, APP_CATEGORY } from "@/lib/ui-text";
 import { cn } from "@/lib/utils";
 
@@ -71,7 +71,7 @@ export function Header() {
                 <FileTypeDropdown compact />
                 <Button variant="ghost" size="icon" onClick={() => setShowMobileSearch(true)} className="h-6 w-6 text-foreground/70 rounded-lg p-0"><Search className="h-3.5 w-3.5" /></Button>
                 <Button variant="ghost" size="icon" className="h-6 w-6 text-foreground/70 rounded-lg p-0" asChild>
-                  <Link href="/settings" aria-label="偏好设置" prefetch>
+                  <Link href="/settings" aria-label="偏好设置" className="[&_svg]:pointer-events-auto">
                     <Settings2 className="h-3.5 w-3.5" />
                   </Link>
                 </Button>
@@ -129,7 +129,7 @@ export function Header() {
               </Button>
             )}
           </div>
-          <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="relative z-20 min-w-0 max-w-full overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <FileTypeTabs compact />
           </div>
           <Button
@@ -138,7 +138,7 @@ export function Header() {
             className="h-7 w-7 shrink-0 text-foreground/70 hover:text-foreground"
             asChild
           >
-            <Link href="/settings" aria-label="偏好设置" prefetch>
+            <Link href="/settings" aria-label="偏好设置" className="relative z-20 [&_svg]:pointer-events-auto">
               <Settings2 className="h-3.5 w-3.5" />
             </Link>
           </Button>

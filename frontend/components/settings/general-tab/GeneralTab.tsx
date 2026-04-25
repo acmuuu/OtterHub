@@ -30,7 +30,7 @@ import {
   clearDirectoryHandleCache,
   pickDownloadDirectoryForFirstTime,
 } from "@/lib/utils/file";
-import { TagSelector } from "@/components/TagSelector";
+import { TagSelector } from "@/components/tags/TagSelector";
 
 export function GeneralTab() {
   const { 

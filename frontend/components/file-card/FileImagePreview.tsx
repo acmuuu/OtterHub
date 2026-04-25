@@ -1,9 +1,9 @@
 "use client";
 
 import { PhotoView } from "react-photo-view";
-import { Image, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { Image as ImageIcon, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import { useFileUIStore } from "@/stores/file";
 
 interface FileImagePreviewProps {
@@ -64,25 +64,32 @@ export function FileImagePreview({
   const img = isLoaded ? (
     <img
       src={src}
-      alt={alt}
+      alt={alt ?? ""}
       loading="lazy"
       decoding="async"
       className={cn(
         "w-full h-full object-cover transition-all duration-300",
         shouldBlur ? "blur-xl scale-110" : "blur-0 scale-100",
         !shouldBlur && canPreview && "cursor-zoom-in",
+        className,
       )}
     />
   ) : (
     <div 
-      className="flex items-center justify-center w-full h-full cursor-pointer hover:bg-white/5 transition-colors group" 
+      className={cn(
+        "flex items-center justify-center w-full h-full cursor-pointer hover:bg-white/5 transition-colors group",
+        className,
+      )}
       onClick={(e) => {
         e.stopPropagation();
         addForceLoadFile(fileKey);
       }}
       title="点击加载图片"
     >
-      <Image className={cn(iconClassName, "group-hover:opacity-80 transition-opacity")} />
+      <ImageIcon
+        aria-hidden="true"
+        className={cn(iconClassName, "group-hover:opacity-80 transition-opacity")}
+      />
     </div>
   );
 
