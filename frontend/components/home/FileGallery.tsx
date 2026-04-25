@@ -1,6 +1,7 @@
 "use client";
 
-import { useActiveBucket, useFilteredFiles, useFileDataStore, useFileQueryStore } from "@/stores/file";
+import { useMemo, useEffect } from "react";
+import { useActiveBucket, useActiveItems, useFileDataStore, useFileQueryStore } from "@/stores/file";
 import { useActiveViewMode, useFileUIStore } from "@/stores/file";
 import { FileCard } from "@/components/file-card";
 import { ViewModeToggle } from "./ViewModeToggle";
@@ -13,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { MasonryGrid } from "@/components/masonry/MasonryGrid";
 import { PhotoProvider } from "react-photo-view";
 import { PhotoToolbar } from "@/components/file-card/FileImagePreview";
-import { useEffect } from "react";
 
 function FileViewRenderer({
   viewMode,
@@ -55,21 +55,45 @@ export function FileGallery() {
   const viewMode = useActiveViewMode();
   const { itemsPerPage, setItemsPerPage, currentPage, setCurrentPage } = useFileUIStore();
   const { fetchNextPage } = useFileDataStore();
-  const { searchQuery, filterLiked, filterTags, filterDateRange } = useFileQueryStore();
-  const files = useFilteredFiles();
+  const {
+    searchQuery,
+    filterLiked,
+    filterTags,
+    filterDateRange,
+    sortType,
+    sortOrder,
+  } = useFileQueryStore();
+  const files = useActiveItems();
   const bucket = useActiveBucket();
+  const listQuery = useMemo(() => ({
+    search: searchQuery.trim() || undefined,
+    liked: filterLiked ? "true" : undefined,
+    tags: filterTags.length > 0 ? filterTags.join(",") : undefined,
+    dateStart: filterDateRange.start?.toString(),
+    dateEnd: filterDateRange.end?.toString(),
+    sortType,
+    sortOrder,
+  }), [filterDateRange.end, filterDateRange.start, filterLiked, filterTags, searchQuery, sortOrder, sortType]);
 
-  // 当筛选条件变化时，重置页码到第一页
+  // 查询条件变化时，重置页码并让服务端按 D1 条件重新拉第一页。
   useEffect(() => {
     setCurrentPage(0);
-  }, [searchQuery, filterLiked, filterTags, filterDateRange, setCurrentPage]);
+    void fetchNextPage(listQuery);
+  }, [fetchNextPage, listQuery, setCurrentPage]);
 
-  const handlePageChange = (selectedItem: { selected: number }) => {
-    setCurrentPage(selectedItem.selected);
+  const handlePageChange = async (selectedItem: { selected: number }) => {
+    const nextPage = selectedItem.selected;
+    const nextPageOffset = nextPage * itemsPerPage;
+    if (nextPageOffset >= files.length && bucket.hasMore && !bucket.loading) {
+      await fetchNextPage(listQuery);
+    }
+    setCurrentPage(nextPage);
   };
 
   const handleItemsPerPageChange = (size: number) => {
     setItemsPerPage(size);
+    setCurrentPage(0);
+    void fetchNextPage(listQuery);
   };
 
   const offset = currentPage * itemsPerPage;
@@ -88,7 +112,7 @@ export function FileGallery() {
           <span>{files.length} 个文件</span>
           {bucket.hasMore && (
             <Button
-              onClick={fetchNextPage}
+              onClick={() => fetchNextPage(listQuery)}
               disabled={bucket.loading || bucket.error}
               variant="ghost"
               size="sm"
@@ -123,7 +147,8 @@ export function FileGallery() {
           loading={bucket.loading}
           error={bucket.error}
           onPageChange={handlePageChange}
-          onLoadMore={fetchNextPage}
+          onLoadMore={() => fetchNextPage(listQuery)}
+          loadedItems={files.length}
           onItemsPerPageChange={handleItemsPerPageChange}
         />
       )}
@@ -131,7 +156,7 @@ export function FileGallery() {
       {viewMode === ViewMode.Masonry && bucket.hasMore && (
         <div className="flex justify-center py-8">
           <button
-            onClick={fetchNextPage}
+            onClick={() => fetchNextPage(listQuery)}
             disabled={bucket.loading}
             className="px-6 py-2 bg-primary/20 text-primary rounded-lg hover:bg-primary/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >

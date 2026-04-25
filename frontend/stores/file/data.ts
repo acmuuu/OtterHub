@@ -15,7 +15,10 @@ type FileBucket = {
   hasMore: boolean;
   loading: boolean;
   error: boolean;
+  queryKey?: string;
 };
+
+type FileListQuery = Omit<ListFilesRequest, "fileType" | "limit" | "cursor">;
 
 /**
  * 按文件名合并本地和服务端文件列表
@@ -33,8 +36,8 @@ interface FileDataState {
 
   // actions
   setActiveType: (type: FileType) => Promise<void>;
-  fetchNextPage: () => Promise<void>;
-  fetchBucket: (type: FileType) => Promise<void>;
+  fetchNextPage: (query?: FileListQuery) => Promise<void>;
+  fetchBucket: (type: FileType, query?: FileListQuery) => Promise<void>;
   
   addFileLocal: (file: FileItem, fileType: FileType) => void;
   deleteFilesLocal: (names: string[]) => void;
@@ -50,7 +53,22 @@ const emptyBucket = (): FileBucket => ({
   hasMore: true,
   loading: false,
   error: false,
+  queryKey: undefined,
 });
+
+function getQueryKey(type: FileType, limit: number, query?: FileListQuery) {
+  return JSON.stringify({
+    type,
+    limit,
+    search: query?.search ?? "",
+    liked: query?.liked ?? "",
+    tags: query?.tags ?? "",
+    dateStart: query?.dateStart ?? "",
+    dateEnd: query?.dateEnd ?? "",
+    sortType: query?.sortType ?? "",
+    sortOrder: query?.sortOrder ?? "",
+  });
+}
 
 export const useFileDataStore = create<FileDataState>()(
   persist(
@@ -74,45 +92,51 @@ export const useFileDataStore = create<FileDataState>()(
         }
       },
 
-      fetchNextPage: async () => {
+      fetchNextPage: async (query) => {
         const { activeType } = get();
-        await get().fetchBucket(activeType);
+        await get().fetchBucket(activeType, query);
       },
 
-      fetchBucket: async (type) => {
+      fetchBucket: async (type, query) => {
         const { buckets } = get();
         const bucket = buckets[type];
+        const { itemsPerPage } = useFileUIStore.getState();
+        const queryKey = getQueryKey(type, itemsPerPage, query);
+        const shouldReset = bucket.queryKey !== queryKey;
+        const currentBucket = shouldReset ? emptyBucket() : bucket;
 
-        if (bucket.loading || !bucket.hasMore) return;
+        if ((!shouldReset && bucket.loading) || !currentBucket.hasMore) return;
 
         set((state) => ({
           buckets: {
             ...state.buckets,
-            [type]: { ...bucket, loading: true, error: false },
+            [type]: { ...currentBucket, loading: true, error: false, queryKey },
           },
         }));
 
         try {
-          const { itemsPerPage } = useFileUIStore.getState();
           const params: ListFilesRequest = { 
             fileType: type,
-            limit: itemsPerPage.toString()
+            limit: itemsPerPage.toString(),
+            ...query,
           };
-          if (bucket.cursor) params.cursor = bucket.cursor;
+          if (currentBucket.cursor) params.cursor = currentBucket.cursor;
 
           const data = await getFileList(params);
 
           set((state) => {
             const prev = state.buckets[type];
+            if (prev.queryKey !== queryKey) return state;
             return {
               buckets: {
                 ...state.buckets,
                 [type]: {
-                  items: bucket.cursor !== undefined ? mergeByName(prev.items, data.keys) : data.keys,
+                  items: currentBucket.cursor !== undefined ? mergeByName(prev.items, data.keys) : data.keys,
                   cursor: data.cursor,
                   hasMore: !data.list_complete,
                   loading: false,
                   error: false,
+                  queryKey,
                 },
               },
             };
@@ -122,7 +146,9 @@ export const useFileDataStore = create<FileDataState>()(
           set((state) => ({
             buckets: {
               ...state.buckets,
-              [type]: { ...bucket, loading: false, error: true },
+              [type]: state.buckets[type].queryKey === queryKey
+                ? { ...state.buckets[type], loading: false, error: true, queryKey }
+                : state.buckets[type],
             },
           }));
         }

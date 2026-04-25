@@ -18,10 +18,28 @@ listRoutes.get(
       limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 50),
       cursor: z.string().optional(),
       fileType: z.enum(FileType).optional(),
+      search: z.string().optional(),
+      liked: z.string().optional().transform((val) => val === "true"),
+      tags: z.string().optional().transform((val) => val ? val.split(",").filter(Boolean) : undefined),
+      dateStart: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined),
+      dateEnd: z.string().optional().transform((val) => val ? parseInt(val, 10) : undefined),
+      sortType: z.enum(["uploadedAt", "name", "fileSize"]).optional(),
+      sortOrder: z.enum(["asc", "desc"]).optional(),
     })
   ),
   async (c) => {
-    const { limit, cursor, fileType } = c.req.valid('query');
+    const {
+      limit,
+      cursor,
+      fileType,
+      search,
+      liked,
+      tags,
+      dateStart,
+      dateEnd,
+      sortType,
+      sortOrder,
+    } = c.req.valid('query');
     const kv = c.env.oh_file_url; 
 
     if (limit < 1) {
@@ -37,7 +55,18 @@ listRoutes.get(
     try {
       if (c.env.oh_file_db) {
         try {
-          const indexed = await listIndexedFiles(c.env, { limit, cursor, fileType });
+          const indexed = await listIndexedFiles(c.env, {
+            limit,
+            cursor,
+            fileType,
+            search,
+            liked,
+            tags,
+            dateStart,
+            dateEnd,
+            sortType,
+            sortOrder,
+          });
           if (indexed) {
             return c.json({
               success: true,

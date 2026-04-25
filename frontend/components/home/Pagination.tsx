@@ -20,13 +20,14 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   totalItems: number;
+  loadedItems: number;
   itemsPerPage: number;
   currentPage: number;
   hasMore: boolean;
   loading: boolean;
   error?: boolean;
-  onPageChange: (selectedItem: { selected: number }) => void;
-  onLoadMore: () => void;
+  onPageChange: (selectedItem: { selected: number }) => void | Promise<void>;
+  onLoadMore: () => void | Promise<void>;
   onItemsPerPageChange: (size: number) => void;
   showPagination?: boolean;
   className?: string;
@@ -36,6 +37,7 @@ const ITEMS_PER_PAGE_OPTIONS = [20, 50, 100, 200, 1000];
 
 export function Pagination({
   totalItems,
+  loadedItems,
   itemsPerPage,
   currentPage,
   hasMore,
@@ -46,7 +48,8 @@ export function Pagination({
   onItemsPerPageChange,
   className,
 }: Props) {
-  const pageCount = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+  const loadedPageCount = Math.max(1, Math.ceil(loadedItems / itemsPerPage));
+  const pageCount = loadedPageCount + (hasMore ? 1 : 0);
 
   return (
     <div
@@ -57,7 +60,7 @@ export function Pagination({
     >
       <ReactPaginate
         breakLabel="..."
-        nextLabel={<ChevronRight className="h-4 w-4" />}
+        nextLabel={loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
         onPageChange={onPageChange}
         pageRangeDisplayed={5}
         pageCount={pageCount}
@@ -77,7 +80,7 @@ export function Pagination({
         forcePage={currentPage}
       />
 
-      {hasMore && (
+      {(hasMore || error) && (
         <Button
           onClick={onLoadMore}
           disabled={loading || error}
@@ -117,9 +120,10 @@ export function Pagination({
         </div>
 
         <div className="flex items-center gap-2 text-sm text-foreground/50">
-          <span>共</span>
+          <span>已加载</span>
           <span className="text-primary font-medium">{totalItems}</span>
           <span>个文件</span>
+          {hasMore && <span>，还有更多</span>}
         </div>
       </>
     </div>

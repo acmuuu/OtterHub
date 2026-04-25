@@ -19,10 +19,17 @@ type ListIndexedFilesOptions = {
   fileType?: FileType;
   limit: number;
   cursor?: string;
+  search?: string;
+  liked?: boolean;
+  tags?: string[];
+  dateStart?: number;
+  dateEnd?: number;
+  sortType?: "uploadedAt" | "name" | "fileSize";
+  sortOrder?: "asc" | "desc";
 };
 
 type DecodedCursor = {
-  uploadedAt: number;
+  sortValue: string | number;
   key: string;
 };
 
@@ -99,15 +106,53 @@ function rowToFileItem(row: FileIndexRow): FileItem {
   };
 }
 
-function encodeCursor(row: FileIndexRow) {
-  return btoa(JSON.stringify({ uploadedAt: row.uploaded_at, key: row.key }));
+function getSortConfig(
+  sortType: ListIndexedFilesOptions["sortType"] = "uploadedAt",
+  sortOrder: ListIndexedFilesOptions["sortOrder"] = "desc",
+) {
+  const order = sortOrder === "asc" ? "ASC" : "DESC";
+
+  switch (sortType) {
+    case "name":
+      return {
+        column: "file_name",
+        expression: "file_name COLLATE NOCASE",
+        order,
+        value: (row: FileIndexRow) => row.file_name,
+      };
+    case "fileSize":
+      return {
+        column: "file_size",
+        expression: "file_size",
+        order,
+        value: (row: FileIndexRow) => row.file_size,
+      };
+    case "uploadedAt":
+    default:
+      return {
+        column: "uploaded_at",
+        expression: "uploaded_at",
+        order,
+        value: (row: FileIndexRow) => row.uploaded_at,
+      };
+  }
+}
+
+function encodeCursor(
+  row: FileIndexRow,
+  sortConfig: ReturnType<typeof getSortConfig>,
+) {
+  return btoa(JSON.stringify({ sortValue: sortConfig.value(row), key: row.key }));
 }
 
 function decodeCursor(cursor?: string): DecodedCursor | null {
   if (!cursor) return null;
   try {
     const decoded = JSON.parse(atob(cursor)) as DecodedCursor;
-    if (typeof decoded.uploadedAt !== "number" || typeof decoded.key !== "string") {
+    if (
+      (typeof decoded.sortValue !== "number" && typeof decoded.sortValue !== "string") ||
+      typeof decoded.key !== "string"
+    ) {
       return null;
     }
     return decoded;
@@ -298,6 +343,7 @@ export async function listIndexedFiles(
 
   const limit = Math.min(Math.max(options.limit, 1), 1000);
   const cursor = decodeCursor(options.cursor);
+  const sortConfig = getSortConfig(options.sortType, options.sortOrder);
   const binds: Array<string | number> = [];
   const where: string[] = [];
 
@@ -311,16 +357,52 @@ export async function listIndexedFiles(
     }
   }
 
+  if (options.search) {
+    const search = `%${options.search.toLowerCase()}%`;
+    where.push(`(
+      lower(file_name) LIKE ?
+      OR lower(key) LIKE ?
+      OR lower(COALESCE(desc, '')) LIKE ?
+      OR lower(COALESCE(tags_json, '')) LIKE ?
+    )`);
+    binds.push(search, search, search, search);
+  }
+
+  if (options.liked) {
+    where.push("liked = 1");
+  }
+
+  if (options.tags?.length) {
+    for (const tag of options.tags) {
+      where.push("COALESCE(tags_json, '[]') LIKE ?");
+      binds.push(`%"${tag}"%`);
+    }
+  }
+
+  if (options.dateStart !== undefined) {
+    where.push("uploaded_at >= ?");
+    binds.push(options.dateStart);
+  }
+
+  if (options.dateEnd !== undefined) {
+    where.push("uploaded_at <= ?");
+    binds.push(options.dateEnd);
+  }
+
   if (cursor) {
-    where.push("(uploaded_at < ? OR (uploaded_at = ? AND key < ?))");
-    binds.push(cursor.uploadedAt, cursor.uploadedAt, cursor.key);
+    const operator = sortConfig.order === "ASC" ? ">" : "<";
+    where.push(`(
+      ${sortConfig.expression} ${operator} ?
+      OR (${sortConfig.expression} = ? AND key ${operator} ?)
+    )`);
+    binds.push(cursor.sortValue, cursor.sortValue, cursor.key);
   }
 
   const rows = await db.prepare(`
     SELECT *
     FROM files
     WHERE ${where.join(" AND ")}
-    ORDER BY uploaded_at DESC, key DESC
+    ORDER BY ${sortConfig.expression} ${sortConfig.order}, key ${sortConfig.order}
     LIMIT ?
   `)
     .bind(...binds, limit + 1)
@@ -334,7 +416,7 @@ export async function listIndexedFiles(
   return {
     keys: page.map(rowToFileItem),
     list_complete: !hasMore,
-    cursor: hasMore && last ? encodeCursor(last) : undefined,
+    cursor: hasMore && last ? encodeCursor(last, sortConfig) : undefined,
   };
 }
 

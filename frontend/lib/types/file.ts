@@ -29,7 +29,14 @@ export type ListFilesRequest = {
   fileType?: FileType;
   // 分页参数
   limit?: string; // 默认且最大为1000
-  cursor?: string; // Cloudflare KV的cursor是字符串类型
+  cursor?: string;
+  search?: string;
+  liked?: string;
+  tags?: string;
+  dateStart?: string;
+  dateEnd?: string;
+  sortType?: SortType;
+  sortOrder?: SortOrder;
 };
 
 export const binaryExtensions = [
