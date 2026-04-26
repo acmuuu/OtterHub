@@ -37,6 +37,7 @@ export function HomePageView() {
 
   const {
     fileInputRef,
+    inputAccept,
     uploadProgress,
     isFileDrag,
     openFileDialog,
@@ -89,6 +90,7 @@ export function HomePageView() {
           ref={fileInputRef}
           type="file"
           multiple
+          accept={inputAccept}
           className="hidden"
           onChange={onInputChange}
         />

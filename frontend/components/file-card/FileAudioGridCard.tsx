@@ -15,6 +15,7 @@ export function FileAudioGridCard({ file, actions }: FileAudioGridCardProps) {
       file={file}
       actions={actions}
       preview={<Music className={`text-emerald-300 ${ICON_DISPLAY_SIZE}`} />}
+      onCardClick={actions.handleView}
     />
   );
 }

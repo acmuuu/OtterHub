@@ -15,6 +15,7 @@ interface FileCardGridBaseProps {
   file: FileItem;
   actions: ReturnType<typeof useFileCardActions>;
   preview: ReactNode;
+  onCardClick?: () => void;
   cardClassName?: string;
   previewWrapperClassName?: string;
   previewInnerClassName?: string;
@@ -24,6 +25,7 @@ export function FileCardGridBase({
   file,
   actions,
   preview,
+  onCardClick,
   cardClassName,
   previewWrapperClassName,
   previewInnerClassName,
@@ -60,6 +62,7 @@ export function FileCardGridBase({
             : "bg-glass-bg border-glass-border hover:border-primary/50",
           cardClassName,
         )}
+        onClick={onCardClick}
       >
         {/* Checkbox */}
         <div className="absolute top-3 left-3 z-10">

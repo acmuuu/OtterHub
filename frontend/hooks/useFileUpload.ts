@@ -10,6 +10,7 @@ import {
 import {
   buildTmpFileKey,
   formatFileSize,
+  getFileCategoryByName,
   getFileType,
   processBatch,
   getMissingChunkIndices,
@@ -29,8 +30,38 @@ import {
 import { useGeneralSettingsStore } from "@/stores/general-store";
 import { MAX_CONCURRENTS } from "@/lib/types";
 
+const ACCEPT_BY_TYPE: Record<FileType, string | undefined> = {
+  [FileType.Image]: ".jpg,.jpeg,.png,.gif,.webp,.svg,.bmp,.ico,.avif,.heic,.heif,.tif,.tiff",
+  [FileType.Audio]: ".mp3,.wav,.ogg,.flac,.aac,.m4a,.wma,.ape,.opus",
+  [FileType.Video]: ".mp4,.webm,.mov,.avi,.mkv,.m4v,.3gp,.ogv",
+  [FileType.Document]: undefined,
+  [FileType.Trash]: undefined,
+};
+
+const FILE_TYPE_LABELS: Record<FileType, string> = {
+  [FileType.Image]: "图片",
+  [FileType.Audio]: "音乐",
+  [FileType.Video]: "视频",
+  [FileType.Document]: "文档",
+  [FileType.Trash]: "回收站",
+};
+
+function matchesUploadTarget(file: File, targetType: FileType) {
+  const category = getFileCategoryByName(file.name);
+
+  if (targetType === FileType.Image) return category === "image";
+  if (targetType === FileType.Audio) return category === "audio";
+  if (targetType === FileType.Video) return category === "video";
+  if (targetType === FileType.Document) {
+    return category !== "image" && category !== "audio" && category !== "video";
+  }
+
+  return true;
+}
+
 export function useFileUpload() {
   const addFilesLocal = useFileDataStore((s) => s.addFilesLocal);
+  const activeType = useFileDataStore((s) => s.activeType);
   const setCurrentPage = useFileUIStore((s) => s.setCurrentPage);
   const { nsfwDetection, defaultUploadTags } = useGeneralSettingsStore();
   const [isFileDrag, setIsFileDrag] = useState(false);
@@ -44,7 +75,20 @@ export function useFileUpload() {
       const fileArray = Array.isArray(files) ? files : Array.from(files);
       if (!fileArray.length) return;
 
-      const processedFiles = fileArray.map((file) => {
+      const validFiles = fileArray.filter((file) =>
+        matchesUploadTarget(file, activeType),
+      );
+      const invalidFiles = fileArray.length - validFiles.length;
+
+      if (invalidFiles > 0) {
+        toast.warning(
+          `${invalidFiles} 个文件不属于${FILE_TYPE_LABELS[activeType]}类型，已跳过`,
+        );
+      }
+
+      if (!validFiles.length) return;
+
+      const processedFiles = validFiles.map((file) => {
         if (file.name.length <= MAX_FILENAME_LENGTH) return file;
 
         const extIndex = file.name.lastIndexOf(".");
@@ -294,7 +338,7 @@ export function useFileUpload() {
         });
       }
     },
-    [addFilesLocal, setCurrentPage, nsfwDetection, defaultUploadTags],
+    [activeType, addFilesLocal, setCurrentPage, nsfwDetection, defaultUploadTags],
   );
 
   const handleFiles = useCallback(
@@ -346,6 +390,7 @@ export function useFileUpload() {
 
   return {
     fileInputRef,
+    inputAccept: ACCEPT_BY_TYPE[activeType],
     uploadProgress,
     isFileDrag,
     openFileDialog,

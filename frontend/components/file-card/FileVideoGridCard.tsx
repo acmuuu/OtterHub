@@ -32,6 +32,7 @@ export function FileVideoGridCard({ file, actions }: FileVideoGridCardProps) {
       file={file}
       actions={actions}
       preview={preview}
+      onCardClick={actions.handleView}
     />
   );
 }
