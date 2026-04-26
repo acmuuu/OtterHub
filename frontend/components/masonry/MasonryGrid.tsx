@@ -1,14 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Masonry } from "masonic";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MasonryImageCard } from "@/components/masonry/MasonryImageCard";
 import { FileItem } from "@shared/types";
 
 interface MasonryGridProps {
   files: FileItem[];
   columnGutter?: number;
-  overscanBy?: number;
 }
 
 /** 较原尺寸约 0.7 倍，预览卡片约小 30% */
@@ -21,11 +19,12 @@ const RESPONSIVE_COLUMN_WIDTHS = {
 export function MasonryGrid({
   files,
   columnGutter = 16,
-  overscanBy = 4,
 }: MasonryGridProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [columnWidth, setColumnWidth] = useState<number>(
     RESPONSIVE_COLUMN_WIDTHS.desktop,
   );
+  const [containerWidth, setContainerWidth] = useState(0);
 
   useEffect(() => {
     const update = () => {
@@ -40,24 +39,57 @@ export function MasonryGrid({
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  const renderCard = useCallback(
-    ({ data }: { data: FileItem }) => <MasonryImageCard file={data} />,
-    [],
-  );
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
 
-  // 加载更多只是追加 items，不能因数量变化重挂载 Masonic，否则底部虚拟布局会丢失测量缓存。
-  const gridKey = files.length > 0 ? files[0].name : "empty";
+    const update = () => setContainerWidth(node.clientWidth);
+    update();
+
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, []);
+
+  const columnCount = useMemo(() => {
+    if (containerWidth <= 0) return 1;
+    return Math.max(
+      1,
+      Math.floor((containerWidth + columnGutter) / (columnWidth + columnGutter)),
+    );
+  }, [columnGutter, columnWidth, containerWidth]);
+
+  const columns = useMemo(() => {
+    const nextColumns = Array.from({ length: columnCount }, () => [] as FileItem[]);
+
+    files.forEach((file, index) => {
+      nextColumns[index % columnCount].push(file);
+    });
+
+    return nextColumns;
+  }, [columnCount, files]);
 
   return (
-    <Masonry
-      key={gridKey}
-      items={files}
-      render={renderCard}
-      columnWidth={columnWidth}
-      columnGutter={columnGutter}
-      overscanBy={overscanBy}
-      maxColumnWidth={280}
-      itemHeightEstimate={210}
-    />
+    <div
+      ref={containerRef}
+      className="grid w-full"
+      style={{
+        gap: columnGutter,
+        gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+      }}
+    >
+      {columns.map((column, columnIndex) => (
+        <div
+          key={columnIndex}
+          className="flex min-w-0 flex-col"
+          style={{ gap: columnGutter }}
+        >
+          {column.map((file) => (
+            <MasonryImageCard key={file.name} file={file} />
+          ))}
+        </div>
+      ))}
+    </div>
   );
 }
