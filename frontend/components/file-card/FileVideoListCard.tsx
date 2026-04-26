@@ -13,6 +13,7 @@ export function FileVideoListCard({ file, actions }: FileVideoListCardProps) {
     <FileCardListBase
       file={file}
       actions={actions}
+      showPlayAction
       icon={<Video className="h-4 w-4 text-purple-400" />}
     />
   );

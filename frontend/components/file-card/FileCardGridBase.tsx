@@ -15,6 +15,8 @@ interface FileCardGridBaseProps {
   file: FileItem;
   actions: ReturnType<typeof useFileCardActions>;
   preview: ReactNode;
+  /** 为 true 时不展示底部文件名（仅图片网格等场景） */
+  hideFileName?: boolean;
   onCardClick?: () => void;
   cardClassName?: string;
   previewWrapperClassName?: string;
@@ -25,6 +27,7 @@ export function FileCardGridBase({
   file,
   actions,
   preview,
+  hideFileName = false,
   onCardClick,
   cardClassName,
   previewWrapperClassName,
@@ -109,22 +112,34 @@ export function FileCardGridBase({
 
         {/* File Info Overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 via-black/60 to-transparent">
-          <div className="flex items-center gap-2 mb-1">
-            <p
-              className={cn(
-                "text-sm font-medium text-white truncate transition-all duration-300",
-                blur && "blur-xs select-none opacity-80",
-              )}
-              title={file.metadata?.fileName}
-            >
-              {file.metadata?.fileName || file.name}
-            </p>
-            <div className="flex gap-1 shrink-0">
-              {tags.map((tag) => (
-                <FileTagBadge key={tag} tag={tag} />
-              ))}
+          {hideFileName ? (
+            tags.length > 0 && (
+              <div className="flex items-center gap-2 mb-1">
+                <div className="flex gap-1 shrink-0 flex-wrap">
+                  {tags.map((tag) => (
+                    <FileTagBadge key={tag} tag={tag} />
+                  ))}
+                </div>
+              </div>
+            )
+          ) : (
+            <div className="flex items-center gap-2 mb-1">
+              <p
+                className={cn(
+                  "text-sm font-medium text-white truncate transition-all duration-300",
+                  blur && "blur-xs select-none opacity-80",
+                )}
+                title={file.metadata?.fileName}
+              >
+                {file.metadata?.fileName || file.name}
+              </p>
+              <div className="flex gap-1 shrink-0">
+                {tags.map((tag) => (
+                  <FileTagBadge key={tag} tag={tag} />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           <div className="flex items-center justify-between">
             <p className="flex items-center gap-2 text-xs text-white/50 min-w-0">
               <span className="shrink-0">{formatFileSize(file.metadata?.fileSize || 0)}</span>

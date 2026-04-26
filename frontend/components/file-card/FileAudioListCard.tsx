@@ -13,6 +13,7 @@ export function FileAudioListCard({ file, actions }: FileAudioListCardProps) {
     <FileCardListBase
       file={file}
       actions={actions}
+      showPlayAction
       icon={<Music className="h-4 w-4 text-emerald-400" />}
     />
   );

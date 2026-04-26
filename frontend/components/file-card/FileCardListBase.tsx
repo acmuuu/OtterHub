@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Loader2, RotateCw } from "lucide-react";
+import { Eye, Loader2, Play, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileTagBadge } from "@/components/tags/FileTagBadge";
 import { FileDetailDialog } from "@/components/file-card/FileDetailDialog";
@@ -14,6 +14,10 @@ interface FileCardListBaseProps {
   file: FileItem;
   actions: ReturnType<typeof useFileCardActions>;
   icon: ReactNode;
+  /** 在列表中显示「播放」（位于收藏按钮左侧，用于音视频） */
+  showPlayAction?: boolean;
+  /** 在列表中显示「查看」（位于收藏按钮左侧，用于文档等） */
+  showViewAction?: boolean;
   rowClassName?: string;
   iconClassName?: string;
 }
@@ -22,6 +26,8 @@ export function FileCardListBase({
   file,
   actions,
   icon,
+  showPlayAction = false,
+  showViewAction = false,
   rowClassName,
   iconClassName,
 }: FileCardListBaseProps) {
@@ -119,6 +125,40 @@ export function FileCardListBase({
               {file.metadata.chunkInfo!.uploadedIndices?.length || 0}/
               {file.metadata.chunkInfo!.total}
             </span>
+          </Button>
+        )}
+
+        {showPlayAction && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            title={isIncompleteUpload ? "等待上传完成" : "播放"}
+            disabled={isIncompleteUpload}
+            className="h-10 w-10 shrink-0 text-foreground/80 hover:text-foreground bg-secondary/50 hover:bg-secondary/80 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity rounded-xl"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleView();
+            }}
+          >
+            <Play className="h-4.5 w-4.5" />
+          </Button>
+        )}
+
+        {showViewAction && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            title={isIncompleteUpload ? "等待上传完成" : "查看"}
+            disabled={isIncompleteUpload}
+            className="h-10 w-10 shrink-0 text-foreground/80 hover:text-foreground bg-secondary/50 hover:bg-secondary/80 backdrop-blur-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity rounded-xl"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleView();
+            }}
+          >
+            <Eye className="h-4.5 w-4.5" />
           </Button>
         )}
 

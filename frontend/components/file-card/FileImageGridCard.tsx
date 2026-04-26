@@ -24,6 +24,7 @@ export function FileImageGridCard({ file, actions }: FileImageGridCardProps) {
     <FileCardGridBase
       file={file}
       actions={actions}
+      hideFileName
       preview={
         <FileImagePreview
           src={getFileUrl(file.name)}

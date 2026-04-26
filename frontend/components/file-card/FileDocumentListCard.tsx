@@ -16,6 +16,7 @@ export function FileDocumentListCard({
     <FileCardListBase
       file={file}
       actions={actions}
+      showViewAction
       icon={<FileText className="h-4 w-4 text-amber-400" />}
     />
   );
