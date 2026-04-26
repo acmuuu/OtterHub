@@ -7,6 +7,8 @@ import type { Env } from "../../types/hono";
 
 type FileAccessResult = {
   db: ReturnType<typeof DBAdapterFactory.getAdapter>;
+  /** KV 存储用的完整 key（短链已解析为 img:... 等形式） */
+  resolvedKey: string;
   item: {
     metadata: FileMetadata;
     value: string | null;
@@ -35,7 +37,7 @@ export async function getAuthorizedFileAccess(
 
   const isPrivate = item.metadata.tags?.includes(FileTag.Private) ?? false;
   if (!isPrivate) {
-    return { db, item, isPrivate };
+    return { db, resolvedKey: key, item, isPrivate };
   }
 
   let authorized = false;
@@ -64,5 +66,5 @@ export async function getAuthorizedFileAccess(
     return failResponse("Unauthorized access to private file", 401);
   }
 
-  return { db, item, isPrivate };
+  return { db, resolvedKey: key, item, isPrivate };
 }

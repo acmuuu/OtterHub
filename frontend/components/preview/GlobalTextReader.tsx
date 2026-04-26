@@ -31,7 +31,7 @@ export function GlobalTextReader({ position = "top-[60%]" }: { position?: string
       setLoading(true);
       setError(null);
       try {
-        const url = getFileUrl(activeFile);
+        const url = getFileUrl(activeFile.name);
         const res = await fetch(url);
         if (!res.ok) throw new Error("加载文件失败");
         const text = await res.text();
@@ -60,7 +60,7 @@ export function GlobalTextReader({ position = "top-[60%]" }: { position?: string
 
   const handleDownload = () => {
     if (!activeFile) return;
-    const url = getFileDownloadUrl(activeFile);
+    const url = getFileDownloadUrl(activeFile.name);
     void downloadFile(url, activeFile.metadata).then((result) => {
       if (result.status === "cancelled") return;
     }).catch(() => {

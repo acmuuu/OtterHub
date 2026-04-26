@@ -15,7 +15,6 @@ export const ICON_DISPLAY_SIZE = "h-18 w-18";
 interface FileContentProps {
   fileType: FileType;
   fileKey: string;
-  shortId?: string;
   safeMode: boolean;
   canPreview: boolean;
   tags?: FileTag[];
@@ -29,7 +28,6 @@ interface FileContentProps {
 export function FileContent({
   fileType,
   fileKey,
-  shortId,
   safeMode,
   canPreview,
   tags,
@@ -51,7 +49,7 @@ export function FileContent({
   if (fileType === FileType.Image) {
     return (
       <FileImagePreview
-        src={imgSrc || getFileUrl({ name: fileKey, shortId })}
+        src={imgSrc || getFileUrl(fileKey)}
         alt={fileKey}
         fileKey={fileKey}
         shouldLoad={load}

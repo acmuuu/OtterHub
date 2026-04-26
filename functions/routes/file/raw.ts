@@ -14,12 +14,12 @@ rawRoutes.get('/:key', async (c) => {
     return access;
   }
 
-  const { db, isPrivate } = access;
+  const { db, resolvedKey, isPrivate } = access;
 
   try {
     // Range 请求：明确不缓存
     if (c.req.header('Range')) {
-      return await db.get(key, c.req.raw);
+      return await db.get(resolvedKey, c.req.raw);
     }
 
     // Only check cache for public files
@@ -28,7 +28,7 @@ rawRoutes.get('/:key', async (c) => {
       if (cached) return cached;
     }
 
-    const resp = await db.get(key, c.req.raw);
+    const resp = await db.get(resolvedKey, c.req.raw);
 
     // Only cache public files
     if (!isPrivate) {

@@ -204,29 +204,23 @@ export function publicFileParam(file: Pick<FileItem, "name" | "shortId">): strin
   return file.shortId ?? file.name;
 }
 
-/**
- * 获取文件预览/下载 URL
- */
-export function getFileUrl(keyOrFile: string | Pick<FileItem, "name" | "shortId">): string {
-  if (typeof keyOrFile === "string") {
-    return `${API_URL}/file/${encodeURIComponent(keyOrFile)}`;
-  }
-  if (keyOrFile.shortId) {
-    return `${API_URL}/file/${keyOrFile.shortId}`;
-  }
-  return `${API_URL}/file/${encodeURIComponent(keyOrFile.name)}`;
+/** 列表/预览等媒体加载：始终使用完整 KV key（与原先一致） */
+export function getFileUrl(key: string): string {
+  return `${API_URL}/file/${encodeURIComponent(key)}`;
 }
 
-export function getFileDownloadUrl(
-  keyOrFile: string | Pick<FileItem, "name" | "shortId">,
-): string {
-  if (typeof keyOrFile === "string") {
-    return `${API_URL}/file/${encodeURIComponent(keyOrFile)}/download`;
+export function getFileDownloadUrl(key: string): string {
+  return `${API_URL}/file/${encodeURIComponent(key)}/download`;
+}
+
+/**
+ * 单链分享/复制：有 short_id 时用短链，否则回退为完整 key URL
+ */
+export function getShareableFileUrl(file: Pick<FileItem, "name" | "shortId">): string {
+  if (file.shortId) {
+    return `${API_URL}/file/${file.shortId}`;
   }
-  if (keyOrFile.shortId) {
-    return `${API_URL}/file/${keyOrFile.shortId}/download`;
-  }
-  return `${API_URL}/file/${encodeURIComponent(keyOrFile.name)}/download`;
+  return getFileUrl(file.name);
 }
 
 /**

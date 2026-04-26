@@ -23,7 +23,7 @@ export function GlobalVideoPlayer({ position = "top-[40%]" }: { position?: strin
 
   if (!activeFile) return null;
 
-  const url = getFileUrl(activeFile);
+  const url = getFileUrl(activeFile.name);
   const poster =
     typeof activeFile.metadata?.thumbUrl === "string" && activeFile.metadata.thumbUrl.length > 0
       ? `${API_URL}${activeFile.metadata.thumbUrl}`

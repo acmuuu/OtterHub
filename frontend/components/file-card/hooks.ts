@@ -4,6 +4,7 @@ import { getFileTypeFromKey, downloadFile, getMissingChunkIndices, processBatch 
 import {
   getFileDownloadUrl,
   getFileUrl,
+  getShareableFileUrl,
   moveToTrash,
   publicFileParam,
   toggleLike,
@@ -61,7 +62,7 @@ export function useFileCardActions(file: FileItem) {
   };
 
   const handleCopyLink = () => {
-    const url = getFileUrl(file);
+    const url = getShareableFileUrl(file);
     navigator.clipboard.writeText(url);
     toast.success("文件链接复制成功~");
   };
@@ -71,7 +72,7 @@ export function useFileCardActions(file: FileItem) {
   };
 
   const handleDownload = () => {
-    const url = getFileDownloadUrl(file);
+    const url = getFileDownloadUrl(file.name);
     void downloadFile(url, file.metadata).then((result) => {
       if (result.status === "cancelled") return;
     }).catch(() => {
@@ -80,7 +81,7 @@ export function useFileCardActions(file: FileItem) {
   };
   
   const handleView = () => {
-    const url = getFileUrl(file);
+    const url = getFileUrl(file.name);
     const fileName = file.metadata?.fileName?.toLowerCase() || "";
     const fileSize = file.metadata?.fileSize || 0;
     

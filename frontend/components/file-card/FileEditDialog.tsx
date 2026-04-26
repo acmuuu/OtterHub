@@ -74,7 +74,7 @@ export function FileEditDialog({
   const handleAnalyzeImage = async () => {
     if (!file || isAnalyzing) return;
 
-    const imgUrl = file.metadata?.thumbUrl || getFileUrl(file);
+    const imgUrl = file.metadata?.thumbUrl || getFileUrl(file.name);
 
     setIsAnalyzing(true);
     try {

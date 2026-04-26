@@ -14,8 +14,8 @@ downloadRoutes.get("/:key/download", async (c) => {
     return access;
   }
 
-  const { db, item, isPrivate } = access;
-  const resp = await db.get(key, c.req.raw);
+  const { db, resolvedKey, item, isPrivate } = access;
+  const resp = await db.get(resolvedKey, c.req.raw);
   const headers = new Headers(resp.headers);
 
   headers.set(
