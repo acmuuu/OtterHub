@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { useCallback, useMemo, useEffect, useRef } from "react";
 import { useActiveBucket, useActiveItems, useFileDataStore, useFileQueryStore } from "@/stores/file";
 import { useActiveViewMode, useFileUIStore } from "@/stores/file";
 import { FileCard } from "@/components/file-card";
@@ -55,6 +55,9 @@ export function FileGallery() {
   const viewMode = useActiveViewMode();
   const { itemsPerPage, setItemsPerPage, currentPage, setCurrentPage } = useFileUIStore();
   const { fetchNextPage } = useFileDataStore();
+  const galleryTopRef = useRef<HTMLDivElement>(null);
+  const masonryLoadMoreRef = useRef<HTMLDivElement>(null);
+  const masonryLoadingRef = useRef(false);
   const {
     searchQuery,
     filterLiked,
@@ -81,6 +84,10 @@ export function FileGallery() {
     void fetchNextPage(listQuery);
   }, [fetchNextPage, listQuery, setCurrentPage]);
 
+  const scrollToGalleryTop = useCallback(() => {
+    galleryTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   const handlePageChange = async (selectedItem: { selected: number }) => {
     const nextPage = selectedItem.selected;
     const nextPageOffset = nextPage * itemsPerPage;
@@ -88,13 +95,70 @@ export function FileGallery() {
       await fetchNextPage(listQuery);
     }
     setCurrentPage(nextPage);
+    scrollToGalleryTop();
   };
 
   const handleItemsPerPageChange = (size: number) => {
     setItemsPerPage(size);
     setCurrentPage(0);
     void fetchNextPage(listQuery);
+    scrollToGalleryTop();
   };
+
+  const handleGalleryLoadMore = async () => {
+    await fetchNextPage(listQuery);
+    scrollToGalleryTop();
+  };
+
+  const handleMasonryLoadMore = useCallback(async () => {
+    if (masonryLoadingRef.current || bucket.loading || (!bucket.hasMore && !bucket.error)) {
+      return;
+    }
+
+    masonryLoadingRef.current = true;
+    const anchor = masonryLoadMoreRef.current;
+    const topBefore = anchor?.getBoundingClientRect().top;
+
+    try {
+      await fetchNextPage(listQuery);
+    } finally {
+      masonryLoadingRef.current = false;
+    }
+
+    if (topBefore === undefined || !anchor) return;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const topAfter = anchor.getBoundingClientRect().top;
+        window.scrollBy({ top: topAfter - topBefore, behavior: "instant" });
+      });
+    });
+  }, [bucket.error, bucket.hasMore, bucket.loading, fetchNextPage, listQuery]);
+
+  useEffect(() => {
+    if (viewMode !== ViewMode.Masonry || !bucket.hasMore || bucket.loading || bucket.error) {
+      return;
+    }
+
+    const anchor = masonryLoadMoreRef.current;
+    if (!anchor) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) void handleMasonryLoadMore();
+      },
+      { rootMargin: "900px 0px" },
+    );
+
+    observer.observe(anchor);
+    return () => observer.disconnect();
+  }, [
+    bucket.error,
+    bucket.hasMore,
+    bucket.loading,
+    handleMasonryLoadMore,
+    viewMode,
+  ]);
 
   const offset = currentPage * itemsPerPage;
   const currentFiles =
@@ -107,12 +171,12 @@ export function FileGallery() {
       maskOpacity={0.85}
       toolbarRender={(props) => <PhotoToolbar {...props} />}
     >
-      <div className="flex items-center justify-between mb-6">
+      <div ref={galleryTopRef} className="flex items-center justify-between mb-6 scroll-mt-20">
         <div className="flex items-center gap-2 text-sm text-foreground/50">
           <span>{files.length} 个文件</span>
-          {bucket.hasMore && (
+          {viewMode !== ViewMode.Masonry && bucket.hasMore && (
             <Button
-              onClick={() => fetchNextPage(listQuery)}
+              onClick={handleGalleryLoadMore}
               disabled={bucket.loading || bucket.error}
               variant="ghost"
               size="sm"
@@ -147,20 +211,27 @@ export function FileGallery() {
           loading={bucket.loading}
           error={bucket.error}
           onPageChange={handlePageChange}
-          onLoadMore={() => fetchNextPage(listQuery)}
+          onLoadMore={handleGalleryLoadMore}
           loadedItems={files.length}
           onItemsPerPageChange={handleItemsPerPageChange}
         />
       )}
 
-      {viewMode === ViewMode.Masonry && bucket.hasMore && (
-        <div className="flex justify-center py-8">
+      {viewMode === ViewMode.Masonry && (bucket.hasMore || bucket.error) && (
+        <div ref={masonryLoadMoreRef} className="flex justify-center py-8">
           <button
-            onClick={() => fetchNextPage(listQuery)}
+            onClick={handleMasonryLoadMore}
             disabled={bucket.loading}
             className="px-6 py-2 bg-primary/20 text-primary rounded-lg hover:bg-primary/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title={bucket.loading ? "加载中" : bucket.error ? "加载失败" : "加载更多"}
           >
-            <ChevronDown className="h-4 w-4" />
+            {bucket.loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : bucket.error ? (
+              <CircleAlert className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
           </button>
         </div>
       )}

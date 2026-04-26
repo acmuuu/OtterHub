@@ -45,9 +45,8 @@ export function MasonryGrid({
     [],
   );
 
-  // 使用文件数量作为 key 的一部分，确保列表缩短时 Masonic 能重置缓存避免崩溃
-  // 同时结合第一个文件的名称，增加列表内容变化时的识别度
-  const gridKey = files.length > 0 ? `${files.length}-${files[0].name}` : "empty";
+  // 加载更多只是追加 items，不能因数量变化重挂载 Masonic，否则底部虚拟布局会丢失测量缓存。
+  const gridKey = files.length > 0 ? files[0].name : "empty";
 
   return (
     <Masonry
