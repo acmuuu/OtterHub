@@ -24,7 +24,7 @@ function FileViewRenderer({
 }) {
   if (viewMode === ViewMode.Grid) {
     return (
-      <div className="grid grid-cols-1 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-[repeat(auto-fill,minmax(224px,1fr))]">
         {files.map((file) => (
           <FileCard key={file.name} file={file} />
         ))}
