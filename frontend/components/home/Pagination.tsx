@@ -19,7 +19,6 @@ import {
 import { cn } from "@/lib/utils";
 
 interface Props {
-  totalItems: number;
   loadedItems: number;
   itemsPerPage: number;
   currentPage: number;
@@ -36,7 +35,6 @@ interface Props {
 const ITEMS_PER_PAGE_OPTIONS = [20, 50, 100, 200, 1000];
 
 export function Pagination({
-  totalItems,
   loadedItems,
   itemsPerPage,
   currentPage,
@@ -99,33 +97,24 @@ export function Pagination({
         </Button>
       )}
 
-      <>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-foreground/50">每页</span>
-          <Select
-            value={itemsPerPage.toString()}
-            onValueChange={(value) => onItemsPerPageChange(Number(value))}
-          >
-            <SelectTrigger className="h-8 w-20 bg-secondary/30 border-glass-border text-foreground/80">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ITEMS_PER_PAGE_OPTIONS.map((size) => (
-                <SelectItem key={size} value={size.toString()}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-foreground/50">
-          <span>已加载</span>
-          <span className="text-primary font-medium">{totalItems}</span>
-          <span>个文件</span>
-          {hasMore && <span>，还有更多</span>}
-        </div>
-      </>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-foreground/50">每页</span>
+        <Select
+          value={itemsPerPage.toString()}
+          onValueChange={(value) => onItemsPerPageChange(Number(value))}
+        >
+          <SelectTrigger className="h-8 w-20 bg-secondary/30 border-glass-border text-foreground/80">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {ITEMS_PER_PAGE_OPTIONS.map((size) => (
+              <SelectItem key={size} value={size.toString()}>
+                {size}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 }

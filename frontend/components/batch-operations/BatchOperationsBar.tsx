@@ -379,7 +379,7 @@ export function BatchOperationsBar() {
       .map((key) => {
         const file = allItemMap.get(key);
         if (!file) return null;
-        return getFileUrl(key);
+        return getFileUrl(file);
       })
       .filter(Boolean);
 

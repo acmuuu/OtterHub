@@ -89,6 +89,7 @@ export function FileCardGrid({ file, actions }: FileCardGridProps) {
             <FileContent
               fileType={fileType}
               fileKey={file.name}
+              shortId={file.shortId}
               safeMode={safeMode}
               canPreview={!blur}
               tags={tags}

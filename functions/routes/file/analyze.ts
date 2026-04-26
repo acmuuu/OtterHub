@@ -11,6 +11,7 @@ import {
   AI_MAX_TOKENS,
 } from '@utils/ai/image-analysis';
 import type { Env } from '../../types/hono';
+import { resolvePublicFileKey } from '@utils/file-index';
 
 export const analyzeRoutes = new Hono<{ Bindings: Env }>();
 
@@ -18,7 +19,7 @@ analyzeRoutes.post(
   '/:key/analyze',
   authMiddleware,
   async (c) => {
-    const key = c.req.param('key');
+    const key = await resolvePublicFileKey(c.env, c.req.param('key'));
 
     // 验证是否为图片文件类型
     const colonIndex = key.indexOf(':');

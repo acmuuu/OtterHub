@@ -8,6 +8,7 @@ import { uploadRoutes } from './routes/upload';
 import { trashRoutes } from './routes/trash';
 import { proxyRoutes } from './routes/proxy';
 import { shareRoutes } from './routes/share';
+import { shortFileRoutes } from './routes/short-file';
 import { Hono } from 'hono';
 import type { Env } from './types/hono';
 
@@ -29,6 +30,7 @@ app.route('/upload', uploadRoutes);
 app.route('/trash', trashRoutes);
 app.route('/proxy', proxyRoutes);
 app.route('/share', shareRoutes);
+app.route('/', shortFileRoutes);
 
 // Export AppType for RPC
 export type AppType = typeof app;

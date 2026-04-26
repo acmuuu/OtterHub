@@ -53,8 +53,17 @@ export async function deleteCache(request: Request) {
   await (await getCache()).delete(createCacheKey(request));
 }
 
-export async function deleteFileCache(origin: string, key: string) {
-  await (await getCache()).delete(createCacheKey(`${origin}/file/${key}`));
+export async function deleteFileCache(
+  origin: string,
+  key: string,
+  shortId?: string | null,
+) {
+  const cache = await getCache();
+  await cache.delete(createCacheKey(`${origin}/file/${key}`));
+  if (shortId) {
+    await cache.delete(createCacheKey(`${origin}/file/${shortId}`));
+    await cache.delete(createCacheKey(`${origin}/${shortId}`));
+  }
 }
 
 // ==========================================

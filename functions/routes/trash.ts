@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { deleteCache, deleteFileCache } from '@utils/cache';
+import { getShortIdForKey, resolvePublicFileKey } from '@utils/file-index';
 import type { Env } from '../types/hono';
 import { authMiddleware } from '../middleware/auth';
 import { fail, ok } from '@utils/response';
@@ -25,15 +26,16 @@ trashRoutes.get('/:key', async (c) => {
 
 // 移入回收站
 trashRoutes.post('/:key/move', async (c) => {
-  const key = c.req.param('key');
+  const key = await resolvePublicFileKey(c.env, c.req.param('key'));
   try {
     const db = DBAdapterFactory.getAdapter(c.env);
+    const shortId = await getShortIdForKey(c.env, key);
     await db.moveToTrash(key);
 
     // 删除缓存
     const url = new URL(c.req.url);
     await deleteCache(c.req.raw);
-    await deleteFileCache(url.origin, key);
+    await deleteFileCache(url.origin, key, shortId);
 
     return ok(c, key, 'File moved to trash');
   } catch (error: any) {

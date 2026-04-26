@@ -9,7 +9,11 @@ CREATE TABLE IF NOT EXISTS files (
   desc TEXT,
   thumb_url TEXT,
   chunk_info_json TEXT,
-  deleted_at INTEGER
+  deleted_at INTEGER,
+  short_id TEXT CHECK (
+    short_id IS NULL
+    OR (LENGTH(short_id) >= 6 AND LENGTH(short_id) <= 64)
+  )
 );
 
 CREATE INDEX IF NOT EXISTS idx_files_active_type_uploaded
@@ -31,4 +35,8 @@ WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_files_active_type_liked
 ON files(file_type, liked, uploaded_at DESC, key DESC)
 WHERE deleted_at IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_files_short_id
+ON files(short_id)
+WHERE short_id IS NOT NULL;
 

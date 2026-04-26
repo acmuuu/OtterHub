@@ -5,7 +5,7 @@ import { FileMetadata, FileTag, MAX_FILENAME_LENGTH, MAX_DESC_LENGTH } from '@sh
 import { authMiddleware } from '../../middleware/auth';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
-import { upsertFileIndex } from '@utils/file-index';
+import { resolvePublicFileKey, upsertFileIndex } from '@utils/file-index';
 import { DBAdapterFactory } from '@utils/db-adapter';
 
 export const metaRoutes = new Hono<{ Bindings: Env }>();
@@ -22,7 +22,7 @@ metaRoutes.patch(
     })
   ),
   async (c) => {
-    const key = c.req.param('key');
+    const key = await resolvePublicFileKey(c.env, c.req.param('key'));
     const { fileName, tags, desc } = c.req.valid('json');
     const kv = c.env.oh_file_url;
     const db = DBAdapterFactory.getAdapter(c.env);

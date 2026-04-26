@@ -1,6 +1,7 @@
 import { FileMetadata, FileTag } from "@shared/types";
 import { verifyJWT } from "@utils/auth";
 import { DBAdapterFactory } from "@utils/db-adapter";
+import { resolvePublicFileKey } from "@utils/file-index";
 import { failResponse } from "@utils/response";
 import type { Env } from "../../types/hono";
 
@@ -22,9 +23,10 @@ function getAuthCookie(request: Request): string | null {
 export async function getAuthorizedFileAccess(
   env: Env,
   request: Request,
-  key: string,
+  keyParam: string,
 ): Promise<FileAccessResult | Response> {
   const db = DBAdapterFactory.getAdapter(env);
+  const key = await resolvePublicFileKey(env, keyParam);
   const item = await db.getFileMetadataWithValue?.(key);
 
   if (!item?.metadata) {

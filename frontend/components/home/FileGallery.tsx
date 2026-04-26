@@ -25,7 +25,7 @@ function FileViewRenderer({
   if (viewMode === ViewMode.Grid) {
     // 约 70% 基准宽（较原 320px 缩小约 30%），同屏可排更多列
     return (
-      <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(224px,1fr))]">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-[repeat(auto-fill,minmax(224px,1fr))]">
         {files.map((file) => (
           <FileCard key={file.name} file={file} />
         ))}
@@ -135,31 +135,6 @@ export function FileGallery() {
     });
   }, [bucket.error, bucket.hasMore, bucket.loading, fetchNextPage, listQuery]);
 
-  useEffect(() => {
-    if (viewMode !== ViewMode.Masonry || !bucket.hasMore || bucket.loading || bucket.error) {
-      return;
-    }
-
-    const anchor = masonryLoadMoreRef.current;
-    if (!anchor) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) void handleMasonryLoadMore();
-      },
-      { rootMargin: "900px 0px" },
-    );
-
-    observer.observe(anchor);
-    return () => observer.disconnect();
-  }, [
-    bucket.error,
-    bucket.hasMore,
-    bucket.loading,
-    handleMasonryLoadMore,
-    viewMode,
-  ]);
-
   const offset = currentPage * itemsPerPage;
   const currentFiles =
     viewMode === ViewMode.Masonry
@@ -204,7 +179,6 @@ export function FileGallery() {
 
       {viewMode !== ViewMode.Masonry && (
         <Pagination
-          totalItems={files.length}
           itemsPerPage={itemsPerPage}
           currentPage={currentPage}
           hasMore={bucket.hasMore}

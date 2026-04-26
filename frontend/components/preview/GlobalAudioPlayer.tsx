@@ -42,7 +42,7 @@ export function GlobalAudioPlayer({ position = "top-[20%]" }: { position?: strin
 
   if (!activeFile) return null;
 
-  const url = getFileUrl(activeFile.name);
+  const url = getFileUrl(activeFile);
 
   const togglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();

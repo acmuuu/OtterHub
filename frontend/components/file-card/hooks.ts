@@ -1,7 +1,14 @@
 import { useState, useMemo, useRef } from "react";
 import { useActiveSelectedKeys, useFileDataStore, useFileUIStore } from "@/stores/file";
 import { getFileTypeFromKey, downloadFile, getMissingChunkIndices, processBatch } from "@/lib/utils";
-import { getFileDownloadUrl, getFileUrl, moveToTrash, toggleLike, uploadChunk } from "@/lib/api";
+import {
+  getFileDownloadUrl,
+  getFileUrl,
+  moveToTrash,
+  publicFileParam,
+  toggleLike,
+  uploadChunk,
+} from "@/lib/api";
 import { MAX_CONCURRENTS, binaryExtensions, DIRECT_DOWNLOAD_LIMIT } from "@/lib/types";
 import { toast } from "sonner";
 import { shouldBlur } from "@/lib/utils";
@@ -47,14 +54,14 @@ export function useFileCardActions(file: FileItem) {
 
   const handleDelete = () => {
     if (!confirm(`确定删除文件 ${file.metadata?.fileName} ?`)) return;
-    moveToTrash(file.name).then(() => {
+    moveToTrash(publicFileParam(file)).then(() => {
       moveToTrashLocal(file);
       toast.success("已移入回收站");
     });
   };
 
   const handleCopyLink = () => {
-    const url = getFileUrl(file.name);
+    const url = getFileUrl(file);
     navigator.clipboard.writeText(url);
     toast.success("文件链接复制成功~");
   };
@@ -64,7 +71,7 @@ export function useFileCardActions(file: FileItem) {
   };
 
   const handleDownload = () => {
-    const url = getFileDownloadUrl(file.name);
+    const url = getFileDownloadUrl(file);
     void downloadFile(url, file.metadata).then((result) => {
       if (result.status === "cancelled") return;
     }).catch(() => {
@@ -73,7 +80,7 @@ export function useFileCardActions(file: FileItem) {
   };
   
   const handleView = () => {
-    const url = getFileUrl(file.name);
+    const url = getFileUrl(file);
     const fileName = file.metadata?.fileName?.toLowerCase() || "";
     const fileSize = file.metadata?.fileSize || 0;
     
@@ -125,7 +132,7 @@ export function useFileCardActions(file: FileItem) {
   };
 
   const handleToggleLike = () => {
-    toggleLike(file.name).then(() => {
+    toggleLike(publicFileParam(file)).then(() => {
       updateFileMetadata(file.name, {
         ...file.metadata,
         liked: !file.metadata.liked,

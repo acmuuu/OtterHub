@@ -4,7 +4,7 @@ import { DBAdapterFactory } from '@utils/db-adapter';
 import { deleteCache, deleteFileCache } from '@utils/cache';
 import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
-import { upsertFileIndex } from '@utils/file-index';
+import { getShortIdForKey, resolvePublicFileKey, upsertFileIndex } from '@utils/file-index';
 
 export const actionRoutes = new Hono<{ Bindings: Env }>();
 
@@ -13,7 +13,7 @@ actionRoutes.post(
   '/:key/toggle-like',
   authMiddleware,
   async (c) => {
-    const key = c.req.param('key');
+    const key = await resolvePublicFileKey(c.env, c.req.param('key'));
     const kv = c.env.oh_file_url;
     const db = DBAdapterFactory.getAdapter(c.env);
 
@@ -43,11 +43,12 @@ actionRoutes.delete(
   '/:key',
   authMiddleware,
   async (c) => {
-    const key = c.req.param('key');
+    const key = await resolvePublicFileKey(c.env, c.req.param('key'));
     const env = c.env;
 
     try {
       const db = DBAdapterFactory.getAdapter(env);
+      const shortId = await getShortIdForKey(env, key);
 
       const { isDeleted } = await db.delete(key);
       if (!isDeleted) {
@@ -56,7 +57,7 @@ actionRoutes.delete(
 
       const url = new URL(c.req.url);
       await deleteCache(c.req.raw);
-      await deleteFileCache(url.origin, key);
+      await deleteFileCache(url.origin, key, shortId);
 
       return ok(c, { key }, 'File permanently deleted');
     } catch (error: any) {

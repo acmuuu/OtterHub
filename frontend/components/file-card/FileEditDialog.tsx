@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { editMetadata, analyzeImage, getFileUrl } from "@/lib/api";
+import { editMetadata, analyzeImage, getFileUrl, publicFileParam } from "@/lib/api";
 import { FileItem, FileTag, MAX_FILENAME_LENGTH, MAX_DESC_LENGTH, FileType } from "@shared/types";
 import { compressImageFromUrl } from "@/lib/utils/file";
 import { Label } from "@radix-ui/react-dropdown-menu";
@@ -74,12 +74,12 @@ export function FileEditDialog({
   const handleAnalyzeImage = async () => {
     if (!file || isAnalyzing) return;
 
-    const imgUrl = file.metadata?.thumbUrl || getFileUrl(file.name);
+    const imgUrl = file.metadata?.thumbUrl || getFileUrl(file);
 
     setIsAnalyzing(true);
     try {
       const blob = await compressImageFromUrl(imgUrl);
-      const result = await analyzeImage(file.name, blob);
+      const result = await analyzeImage(publicFileParam(file), blob);
       const newDesc = result.desc || "";
       
       // 如果超过长度限制，截断
@@ -124,7 +124,7 @@ export function FileEditDialog({
         desc: desc.trim() || undefined,
       };
 
-      await editMetadata(file.name, updatedMetadata);
+      await editMetadata(publicFileParam(file), updatedMetadata);
 
       toast.success("元数据更新成功");
 

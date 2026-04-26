@@ -1,5 +1,5 @@
 import { FileItem, FileMetadata, FileType, trashPrefix } from "@shared/types";
-import type { Env, KVNamespace } from "../types/hono";
+import type { D1Database, Env, KVNamespace } from "../types/hono";
 
 type FileIndexRow = {
   key: string;
@@ -13,6 +13,7 @@ type FileIndexRow = {
   thumb_url: string | null;
   chunk_info_json: string | null;
   deleted_at: number | null;
+  short_id: string | null;
 };
 
 type ListIndexedFilesOptions = {
@@ -40,6 +41,89 @@ type BackfillOptions = {
 
 const FILE_TYPES = new Set<string>(Object.values(FileType));
 let schemaReady = false;
+
+const SHORT_ID_LEN = 12;
+const SHORT_ID_ALPHABET =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
+
+function randomShortId(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(SHORT_ID_LEN));
+  let out = "";
+  for (let i = 0; i < SHORT_ID_LEN; i++) {
+    out += SHORT_ID_ALPHABET[bytes[i]! % SHORT_ID_ALPHABET.length];
+  }
+  return out;
+}
+
+async function shortIdExists(db: D1Database, id: string): Promise<boolean> {
+  const row = await db.prepare("SELECT 1 AS ok FROM files WHERE short_id = ? LIMIT 1")
+    .bind(id)
+    .first<{ ok: number }>();
+  return Boolean(row?.ok);
+}
+
+async function generateUniqueShortId(db: D1Database): Promise<string> {
+  for (let i = 0; i < 8; i++) {
+    const id = randomShortId();
+    if (!(await shortIdExists(db, id))) return id;
+  }
+  throw new Error("Failed to allocate unique short_id");
+}
+
+export async function getShortIdForKey(env: Env, key: string): Promise<string | null> {
+  const db = getD1(env);
+  if (!db) return null;
+  try {
+    await ensureFileIndexSchema(env);
+    const row = await db.prepare("SELECT short_id FROM files WHERE key = ?")
+      .bind(key)
+      .first<{ short_id: string | null }>();
+    return row?.short_id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getKeyByShortId(env: Env, shortId: string): Promise<string | null> {
+  const db = getD1(env);
+  if (!db) return null;
+  if (shortId.length < 6 || shortId.length > 64) return null;
+  try {
+    await ensureFileIndexSchema(env);
+    const row = await db.prepare("SELECT key FROM files WHERE short_id = ? AND deleted_at IS NULL")
+      .bind(shortId)
+      .first<{ key: string }>();
+    return row?.key ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 将 URL 中的标识解析为 KV key：已是完整 key（含 `:`）则原样返回，否则按 short_id 查 D1。
+ */
+export async function resolvePublicFileKey(env: Env, param: string): Promise<string> {
+  if (param.includes(":")) {
+    return param;
+  }
+  if (param.length < 6) {
+    return param;
+  }
+  const key = await getKeyByShortId(env, param);
+  return key ?? param;
+}
+
+async function migrateFileIndexColumns(db: D1Database) {
+  const info = await db.prepare("PRAGMA table_info(files)").all<{ name: string }>();
+  const names = new Set((info.results ?? []).map((col: { name: string }) => col.name));
+  if (!names.has("short_id")) {
+    await db.prepare("ALTER TABLE files ADD COLUMN short_id TEXT").run();
+  }
+  await db.prepare(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_files_short_id
+    ON files(short_id) WHERE short_id IS NOT NULL
+  `).run();
+}
 
 function getD1(env: Env) {
   return env.oh_file_db;
@@ -81,6 +165,7 @@ function toFileIndexRow(
     thumb_url: metadata.thumbUrl ?? null,
     chunk_info_json: metadata.chunkInfo ? JSON.stringify(metadata.chunkInfo) : null,
     deleted_at: deletedAt ?? (isTrashKey(key) ? Date.now() : null),
+    short_id: null,
   };
 }
 
@@ -102,6 +187,7 @@ function rowToFileItem(row: FileIndexRow): FileItem {
 
   return {
     name: row.key,
+    shortId: row.short_id ?? undefined,
     metadata,
   };
 }
@@ -178,9 +264,15 @@ export async function ensureFileIndexSchema(env: Env) {
       desc TEXT,
       thumb_url TEXT,
       chunk_info_json TEXT,
-      deleted_at INTEGER
+      deleted_at INTEGER,
+      short_id TEXT CHECK (
+        short_id IS NULL
+        OR (LENGTH(short_id) >= 6 AND LENGTH(short_id) <= 64)
+      )
     )
   `).run();
+
+  await migrateFileIndexColumns(db);
 
   await db.prepare(`
     CREATE INDEX IF NOT EXISTS idx_files_active_type_uploaded
@@ -220,7 +312,7 @@ export async function upsertFileIndex(
   env: Env,
   key: string,
   metadata: FileMetadata,
-  options: { deletedAt?: number | null } = {},
+  options: { deletedAt?: number | null; shortId?: string | null } = {},
 ) {
   const db = getD1(env);
   if (!db) return;
@@ -230,6 +322,19 @@ export async function upsertFileIndex(
 
   try {
     await ensureFileIndexSchema(env);
+    const existingShort = await db.prepare("SELECT short_id FROM files WHERE key = ?")
+      .bind(key)
+      .first<{ short_id: string | null }>();
+
+    let shortId: string;
+    if (options.shortId !== undefined && options.shortId !== null) {
+      shortId = options.shortId;
+    } else if (existingShort?.short_id) {
+      shortId = existingShort.short_id;
+    } else {
+      shortId = await generateUniqueShortId(db);
+    }
+
     await db.prepare(`
       INSERT INTO files (
         key,
@@ -242,9 +347,10 @@ export async function upsertFileIndex(
         desc,
         thumb_url,
         chunk_info_json,
-        deleted_at
+        deleted_at,
+        short_id
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(key) DO UPDATE SET
         file_type = excluded.file_type,
         file_name = excluded.file_name,
@@ -255,7 +361,8 @@ export async function upsertFileIndex(
         desc = excluded.desc,
         thumb_url = excluded.thumb_url,
         chunk_info_json = excluded.chunk_info_json,
-        deleted_at = excluded.deleted_at
+        deleted_at = excluded.deleted_at,
+        short_id = COALESCE(files.short_id, excluded.short_id)
     `)
       .bind(
         row.key,
@@ -269,6 +376,7 @@ export async function upsertFileIndex(
         row.thumb_url,
         row.chunk_info_json,
         row.deleted_at,
+        shortId,
       )
       .run();
   } catch (error) {
@@ -318,8 +426,12 @@ export async function moveFileIndexToTrash(
   trashKey: string,
   metadata: FileMetadata,
 ) {
+  const shortId = await getShortIdForKey(env, key);
   await deleteFileIndex(env, key);
-  await upsertFileIndex(env, trashKey, metadata, { deletedAt: Date.now() });
+  await upsertFileIndex(env, trashKey, metadata, {
+    deletedAt: Date.now(),
+    shortId: shortId ?? undefined,
+  });
 }
 
 export async function restoreFileIndexFromTrash(
@@ -328,8 +440,12 @@ export async function restoreFileIndexFromTrash(
   originalKey: string,
   metadata: FileMetadata,
 ) {
+  const shortId = await getShortIdForKey(env, trashKey);
   await deleteFileIndex(env, trashKey);
-  await upsertFileIndex(env, originalKey, metadata, { deletedAt: null });
+  await upsertFileIndex(env, originalKey, metadata, {
+    deletedAt: null,
+    shortId: shortId ?? undefined,
+  });
 }
 
 export async function listIndexedFiles(
@@ -362,10 +478,11 @@ export async function listIndexedFiles(
     where.push(`(
       lower(file_name) LIKE ?
       OR lower(key) LIKE ?
+      OR lower(COALESCE(short_id, '')) LIKE ?
       OR lower(COALESCE(desc, '')) LIKE ?
       OR lower(COALESCE(tags_json, '')) LIKE ?
     )`);
-    binds.push(search, search, search, search);
+    binds.push(search, search, search, search, search);
   }
 
   if (options.liked) {
@@ -457,5 +574,31 @@ export async function backfillFileIndexFromKV(
     list_complete: Boolean(list.list_complete),
     cursor: list.cursor as string | undefined,
   };
+}
+
+/** 为历史行补全 short_id（每行一次 upsert） */
+export async function assignMissingShortIds(env: Env, limit: number) {
+  const db = getD1(env);
+  if (!db) {
+    throw new Error("D1 binding oh_file_db is not configured");
+  }
+
+  await ensureFileIndexSchema(env);
+  const cap = Math.min(Math.max(limit, 1), 1000);
+  const rows = await db.prepare(
+    "SELECT * FROM files WHERE short_id IS NULL LIMIT ?",
+  )
+    .bind(cap)
+    .all<FileIndexRow>();
+
+  let updated = 0;
+  for (const row of rows.results ?? []) {
+    await upsertFileIndex(env, row.key, rowToMetadata(row), {
+      deletedAt: row.deleted_at,
+    });
+    updated += 1;
+  }
+
+  return { updated, limit: cap };
 }
 

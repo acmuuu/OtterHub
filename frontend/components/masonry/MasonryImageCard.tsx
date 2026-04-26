@@ -28,7 +28,7 @@ export function MasonryImageCard({ file }: MasonryImageCardProps) {
   
   const load = shouldLoad || forceLoadFiles.includes(file.name);
 
-  const imageUrl = getFileUrl(file.name);
+  const imageUrl = getFileUrl(file);
 
   // 图片内容 - 让图片自然渲染，保持原始宽高比
   const imgContent = load ? (

@@ -35,6 +35,8 @@ export type ApiResponse<T = any> = {
 // 存储在Cloudflare KV中的文件项
 export type FileItem = {
   name: string; //  KV中的key
+  /** D1 索引中的短链 id（≥6 字符），用于 /file/:shortId 等公共 URL */
+  shortId?: string;
   metadata: FileMetadata;
   expiration?: number;
 }

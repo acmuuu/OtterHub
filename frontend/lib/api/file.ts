@@ -3,6 +3,7 @@ import { API_URL, unwrap } from "./config";
 import {
   ApiResponse,
   ChunkUploadInitPayload,
+  FileItem,
   FileTag,
   ListFilesResponse,
   SingleUploadPayload,
@@ -198,15 +199,34 @@ export async function getFileList(
   );
 }
 
+/** 用于 URL / 部分需解析的 API 路径：优先短链，否则完整 KV key */
+export function publicFileParam(file: Pick<FileItem, "name" | "shortId">): string {
+  return file.shortId ?? file.name;
+}
+
 /**
  * 获取文件预览/下载 URL
  */
-export function getFileUrl(key: string): string {
-  return `${API_URL}/file/${key}`;
+export function getFileUrl(keyOrFile: string | Pick<FileItem, "name" | "shortId">): string {
+  if (typeof keyOrFile === "string") {
+    return `${API_URL}/file/${encodeURIComponent(keyOrFile)}`;
+  }
+  if (keyOrFile.shortId) {
+    return `${API_URL}/file/${keyOrFile.shortId}`;
+  }
+  return `${API_URL}/file/${encodeURIComponent(keyOrFile.name)}`;
 }
 
-export function getFileDownloadUrl(key: string): string {
-  return `${API_URL}/file/${key}/download`;
+export function getFileDownloadUrl(
+  keyOrFile: string | Pick<FileItem, "name" | "shortId">,
+): string {
+  if (typeof keyOrFile === "string") {
+    return `${API_URL}/file/${encodeURIComponent(keyOrFile)}/download`;
+  }
+  if (keyOrFile.shortId) {
+    return `${API_URL}/file/${keyOrFile.shortId}/download`;
+  }
+  return `${API_URL}/file/${encodeURIComponent(keyOrFile.name)}/download`;
 }
 
 /**
