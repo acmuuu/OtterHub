@@ -2,13 +2,13 @@ import { ReactNode } from "react";
 import { Eye, Loader2, Play, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileTagBadge } from "@/components/tags/FileTagBadge";
-import { FileDetailDialog } from "@/components/file-card/FileDetailDialog";
+import { FileDetailDialog } from "@/components/cards/FileDetailDialog";
 import { FileActions } from "./FileActions";
 import { FileItem } from "@shared/types";
 import { cn, formatFileSize, formatTime } from "@/lib/utils";
 import { useFileCardActions } from "./hooks";
 import { FileEditDialog } from "./FileEditDialog";
-import { ShareDialog } from "../file/share-dialog";
+import { ShareDialog } from "../share/share-dialog";
 
 interface FileCardListBaseProps {
   file: FileItem;

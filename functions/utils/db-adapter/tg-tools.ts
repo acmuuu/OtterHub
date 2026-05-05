@@ -1,4 +1,5 @@
 import { getContentTypeByExt, getFileExt, getFileTypeByMimeOrExt } from "../file";
+import type { StoredUploadFileType } from "@utils/upload-hint";
 import { FileType } from "@shared/types";
 
 /**
@@ -81,7 +82,8 @@ export async function processGifFile(
 
 export function resolveFileDescriptor(
   file: File,
-  fileName: string
+  fileName: string,
+  preferred?: StoredUploadFileType,
 ): {
   apiEndpoint: string;
   field: string;
@@ -90,7 +92,54 @@ export function resolveFileDescriptor(
 } {
   const ext = getFileExt(fileName).toLowerCase();
   const mime = file.type || getContentTypeByExt(ext);
-  const fileType = getFileTypeByMimeOrExt(mime, ext);
+
+  if (preferred !== undefined) {
+    if (preferred === FileType.Document) {
+      return {
+        apiEndpoint: "sendDocument",
+        field: "document",
+        fileType: FileType.Document,
+        ext,
+      };
+    }
+
+    if (preferred === FileType.Image) {
+      if (mime === "image/gif" || ext === "gif" || mime === "image/webp" || ext === "webp") {
+        return {
+          apiEndpoint: "sendDocument",
+          field: "document",
+          fileType: FileType.Image,
+          ext,
+        };
+      }
+      return {
+        apiEndpoint: "sendPhoto",
+        field: "photo",
+        fileType: FileType.Image,
+        ext,
+      };
+    }
+
+    if (preferred === FileType.Video) {
+      return {
+        apiEndpoint: "sendVideo",
+        field: "video",
+        fileType: FileType.Video,
+        ext,
+      };
+    }
+
+    if (preferred === FileType.Audio) {
+      return {
+        apiEndpoint: "sendAudio",
+        field: "audio",
+        fileType: FileType.Audio,
+        ext,
+      };
+    }
+  }
+
+  const detected = getFileTypeByMimeOrExt(mime, ext);
 
   // GIF 特判
   if (mime === "image/gif" || ext === "gif" || mime === "image/webp" || ext === "webp") {
@@ -102,7 +151,7 @@ export function resolveFileDescriptor(
     };
   }
 
-  if (fileType === FileType.Image) {
+  if (detected === FileType.Image) {
     return {
       apiEndpoint: "sendPhoto",
       field: "photo",
@@ -111,7 +160,7 @@ export function resolveFileDescriptor(
     };
   }
 
-  if (fileType === FileType.Video) {
+  if (detected === FileType.Video) {
     return {
       apiEndpoint: "sendVideo",
       field: "video",
@@ -120,7 +169,7 @@ export function resolveFileDescriptor(
     };
   }
 
-  if (fileType === FileType.Audio) {
+  if (detected === FileType.Audio) {
     return {
       apiEndpoint: "sendAudio",
       field: "audio",

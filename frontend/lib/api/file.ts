@@ -115,6 +115,9 @@ export async function uploadFileWithProgress(
   form.append("file", file);
   form.append("nsfw", options.nsfw ? "true" : "false");
   form.append("tags", JSON.stringify(options.tags ?? []));
+  if (options.fileType != null) {
+    form.append("fileType", options.fileType);
+  }
 
   const url = `${API_URL}/upload`;
   return xhrPostForm<string>(url, form, onProgress);

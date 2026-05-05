@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect } from "react";
 import { useResolvedPathname } from "@/hooks/use-resolved-pathname";
 import { FileUploadZone } from "./FileUploadZone";
 import { FileGallery } from "./FileGallery";
-import { BatchOperationsBar } from "@/components/batch-operations/BatchOperationsBar";
+import { BatchOperationsBar } from "@/components/batch/BatchOperationsBar";
 import { EmptyState } from "./EmptyState";
 import {
   useActiveItems,

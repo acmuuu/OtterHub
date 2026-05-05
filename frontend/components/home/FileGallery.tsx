@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useEffect, useRef } from "react";
 import { useActiveBucket, useActiveItems, useFileDataStore, useFileQueryStore } from "@/stores/file";
 import { useActiveViewMode, useFileUIStore } from "@/stores/file";
-import { FileCard } from "@/components/file-card";
+import { FileCard } from "@/components/cards";
 import { ViewModeToggle } from "./ViewModeToggle";
 import { SortTypeDropdown } from "./SortTypeDropdown";
 import { FilterDropdown } from "./FilterDropdown";
@@ -13,7 +13,7 @@ import { ChevronDown, Loader2, CircleAlert, Ellipsis } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MasonryGrid } from "@/components/masonry/MasonryGrid";
 import { PhotoProvider } from "react-photo-view";
-import { PhotoToolbar } from "@/components/file-card/FileImagePreview";
+import { PhotoToolbar } from "@/components/cards/FileImagePreview";
 
 function FileViewRenderer({
   viewMode,

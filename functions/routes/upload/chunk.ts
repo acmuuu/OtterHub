@@ -17,7 +17,12 @@ chunkUploadRoutes.post(
   zValidator(
     'json',
     z.object({
-      fileType: z.enum(FileType),
+      fileType: z.enum([
+        FileType.Image,
+        FileType.Audio,
+        FileType.Video,
+        FileType.Document,
+      ]),
       fileName: z.string().min(1).max(MAX_FILENAME_LENGTH),
       fileSize: z.number().int().positive(),
       totalChunks: z.number().int().positive(),

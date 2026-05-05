@@ -3,12 +3,26 @@ import { isDev } from "../common";
 import { R2Adapter } from "./r2-adapter";
 import { TGAdapter } from "./tg-adapter";
 import { CF } from "types";
+import type { UploadFileHint } from "@utils/upload-hint";
+
+export type { UploadFileHint } from "@utils/upload-hint";
 
 // 存储适配器接口定义
 export interface DBAdapter {
   // 上传单个完整文件；waitUntil 可选，传入后 AI 分析将在后台异步执行
-  uploadFile(file: File | Blob | Uint8Array, metadata: FileMetadata, waitUntil?: (p: Promise<any>) => void): Promise<{ key: string }>;
-  uploadStream(stream: ReadableStream, metadata: FileMetadata, waitUntil?: (p: Promise<any>) => void, mimeType?: string): Promise<{ key: string }>;
+  uploadFile(
+    file: File | Blob | Uint8Array,
+    metadata: FileMetadata,
+    waitUntil?: (p: Promise<any>) => void,
+    hint?: UploadFileHint,
+  ): Promise<{ key: string }>;
+  uploadStream(
+    stream: ReadableStream,
+    metadata: FileMetadata,
+    waitUntil?: (p: Promise<any>) => void,
+    mimeType?: string,
+    hint?: UploadFileHint,
+  ): Promise<{ key: string }>;
   // 上传分片文件
   uploadChunk(
     key: string,

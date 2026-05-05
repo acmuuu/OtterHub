@@ -5,6 +5,7 @@ import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
 import { normalizeUploadTags, parseUploadTags } from '@utils/upload-tags';
 import { upsertFileIndex } from '@utils/file-index';
+import { parseUploadFileTypeField } from '@utils/upload-hint';
 
 export const singleUploadRoutes = new Hono<{ Bindings: Env }>();
 
@@ -21,6 +22,14 @@ singleUploadRoutes.post('/', async (c) => {
     const fileSize = uploadFile.size;
     const isNsfw = formData.get('nsfw') === 'true';
     const rawTags = formData.get('tags');
+
+    let requestedFileType: ReturnType<typeof parseUploadFileTypeField>;
+    try {
+      requestedFileType = parseUploadFileTypeField(formData.get('fileType'));
+    } catch (e: any) {
+      return fail(c, e.message, 400);
+    }
+
     const tags = typeof rawTags === 'string' ? parseUploadTags(rawTags) : undefined;
 
     const dbAdapter = DBAdapterFactory.getAdapter(c.env);
@@ -32,7 +41,12 @@ singleUploadRoutes.post('/', async (c) => {
       tags: normalizeUploadTags(tags, { forceNsfw: isNsfw }),
     };
 
-    const { key } = await dbAdapter.uploadFile(uploadFile, metadata, c.executionCtx.waitUntil.bind(c.executionCtx));
+    const { key } = await dbAdapter.uploadFile(
+      uploadFile,
+      metadata,
+      c.executionCtx.waitUntil.bind(c.executionCtx),
+      requestedFileType ? { fileType: requestedFileType } : undefined,
+    );
     await upsertFileIndex(c.env, key, metadata);
     return ok(c, key);
   } catch (error: any) {

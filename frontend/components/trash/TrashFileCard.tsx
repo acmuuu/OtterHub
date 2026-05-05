@@ -7,7 +7,7 @@ import { useFileDataStore } from "@/stores/file";
 import { useFileUIStore } from "@/stores/file";
 import { FileItem, FileType, trashPrefix } from "@shared/types";
 import { getFileTypeFromKey, cn } from "@/lib/utils";
-import { FileContent } from "@/components/file-card";
+import { FileContent } from "@/components/cards";
 import { deleteFile, getTrashFileUrl, restoreFile } from "@/lib/api";
 import { toast } from "sonner";
 import { useGeneralSettingsStore } from "@/stores/general-store";

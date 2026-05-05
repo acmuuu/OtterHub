@@ -12,6 +12,7 @@ import {
   FileMetadata,
   FileType,
 } from "@shared/types";
+import type { UploadFileHint } from "@utils/upload-hint";
 import {
   extractKeyFromTrash,
   parseRangeHeader,
@@ -33,13 +34,16 @@ export class R2Adapter extends BaseAdapter {
   async uploadFile(
     file: File | Blob | Uint8Array,
     metadata: FileMetadata,
+    _waitUntil?: (p: Promise<any>) => void,
+    hint?: UploadFileHint,
   ): Promise<{ key: string }> {
     const fileId = getUniqueFileId();
     const fileName = metadata.fileName;
     const fileExtension = (fileName.split(".").pop() ?? "").toLowerCase();
 
     const mimeType = (file as any).type || getContentTypeByExt(fileExtension);
-    const fileType = getFileTypeByMimeOrExt(mimeType, fileExtension);
+    const fileType =
+      hint?.fileType ?? getFileTypeByMimeOrExt(mimeType, fileExtension);
 
     // 构建带有前缀的完整fileId
     const key = buildKeyId(fileType, fileId, fileExtension);
@@ -64,6 +68,7 @@ export class R2Adapter extends BaseAdapter {
     metadata: FileMetadata,
     waitUntil?: (p: Promise<any>) => void,
     mimeType?: string,
+    hint?: UploadFileHint,
   ): Promise<{ key: string }> {
     const fileId = getUniqueFileId();
     const fileName = metadata.fileName;
@@ -71,7 +76,8 @@ export class R2Adapter extends BaseAdapter {
     // 优先使用传入的 mimeType,否则根据扩展名推导
     const contentType = mimeType || getContentTypeByExt(fileExtension);
 
-    const fileType = getFileTypeByMimeOrExt(contentType, fileExtension);
+    const fileType =
+      hint?.fileType ?? getFileTypeByMimeOrExt(contentType, fileExtension);
 
     const key = buildKeyId(fileType, fileId, fileExtension);
 

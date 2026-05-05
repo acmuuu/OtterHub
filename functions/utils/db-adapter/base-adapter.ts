@@ -5,6 +5,7 @@ import { getUniqueFileId } from "../file";
 import { TEMP_CHUNK_TTL } from "types";
 import { TRASH_EXPIRATION_TTL } from "@shared/types";
 import { getIndexedFileMetadataWithValue, moveFileIndexToTrash, restoreFileIndexFromTrash, upsertFileIndex } from "@utils/file-index";
+import type { UploadFileHint } from "@utils/upload-hint";
 /**
  * 存储适配器基类
  * 提供通用的分片文件处理逻辑
@@ -23,6 +24,7 @@ export abstract class BaseAdapter implements DBAdapter {
     file: File | Blob | Uint8Array,
     metadata: FileMetadata,
     waitUntil?: (p: Promise<any>) => void,
+    hint?: UploadFileHint,
   ): Promise<{ key: string }>;
 
   abstract uploadStream(
@@ -30,6 +32,7 @@ export abstract class BaseAdapter implements DBAdapter {
     metadata: FileMetadata,
     waitUntil?: (p: Promise<any>) => void,
     mimeType?: string,
+    hint?: UploadFileHint,
   ): Promise<{ key: string }>;
 
   abstract get(key: string, req?: Request): Promise<Response>;

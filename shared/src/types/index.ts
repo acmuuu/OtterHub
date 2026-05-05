@@ -63,6 +63,8 @@ export type UploadTagsInput = FileTag[];
 export interface SingleUploadPayload {
   nsfw?: boolean;
   tags?: UploadTagsInput;
+  /** 与 FileType 一致：img | audio | video | doc；不传则按 MIME/扩展名推断 */
+  fileType?: FileType.Image | FileType.Audio | FileType.Video | FileType.Document;
 }
 
 export interface ChunkUploadInitPayload {
@@ -78,6 +80,8 @@ export interface UrlUploadPayload {
   fileName?: string;
   isNsfw?: boolean;
   tags?: UploadTagsInput;
+  /** 不传则按远端 Content-Type / 文件名推断 */
+  fileType?: FileType.Image | FileType.Audio | FileType.Video | FileType.Document;
 }
 
 // 分片信息（用于大文件分片上传）

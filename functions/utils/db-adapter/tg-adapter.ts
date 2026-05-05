@@ -28,6 +28,7 @@ import {
 } from "./tg-tools";
 
 import { MAX_CHUNK_SIZE } from "@shared/types";
+import type { UploadFileHint } from "@utils/upload-hint";
 import { analyzeImageAndEnrich, isSupportedImage } from "../ai/image-analysis";
 import { deleteFileIndex } from "@utils/file-index";
 
@@ -65,6 +66,7 @@ export class TGAdapter extends BaseAdapter {
     file: File | Blob | Uint8Array,
     metadata: FileMetadata,
     waitUntil?: (p: Promise<any>) => void,
+    hint?: UploadFileHint,
   ): Promise<{ key: string }> {
     if (metadata.fileSize > MAX_CHUNK_SIZE) {
       throw new Error(`File size exceeds ${MAX_CHUNK_SIZE}MB`);
@@ -88,6 +90,7 @@ export class TGAdapter extends BaseAdapter {
     const { apiEndpoint, field, fileType, ext } = resolveFileDescriptor(
       processedFile,
       processedFileName,
+      hint?.fileType,
     );
 
     const formData = new FormData();
@@ -154,13 +157,14 @@ export class TGAdapter extends BaseAdapter {
     metadata: FileMetadata,
     waitUntil?: (p: Promise<any>) => void,
     mimeType?: string,
+    hint?: UploadFileHint,
   ): Promise<{ key: string }> {
     // Telegram 不支持流式上传，需要转为 Blob
     const response = new Response(stream);
     const blob = await response.blob();
     // 如果提供了 mimeType，创建带类型的 Blob
     const typedBlob = mimeType ? new Blob([blob], { type: mimeType }) : blob;
-    return this.uploadFile(typedBlob, metadata, waitUntil);
+    return this.uploadFile(typedBlob, metadata, waitUntil, hint);
   }
 
   /**

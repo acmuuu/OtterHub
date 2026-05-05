@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { FileMetadata, FileTag, MAX_FILENAME_LENGTH } from '@shared/types';
+import { FileMetadata, FileTag, MAX_FILENAME_LENGTH, FileType } from '@shared/types';
 import { DBAdapterFactory } from '@utils/db-adapter';
 import { proxyGet } from '@utils/proxy';
 import type { Env } from '../../types/hono';
@@ -27,10 +27,13 @@ urlUploadRoutes.post(
       fileName: z.string().optional(),
       isNsfw: z.boolean().optional().default(false),
       tags: z.array(z.enum(FileTag)).optional(),
+      fileType: z
+        .enum([FileType.Image, FileType.Audio, FileType.Video, FileType.Document])
+        .optional(),
     })
   ),
   async (c) => {
-    const { url, fileName, isNsfw, tags } = c.req.valid('json');
+    const { url, fileName, isNsfw, tags, fileType: requestedFileType } = c.req.valid('json');
 
     try {
       const response = await proxyGet(url);
@@ -71,10 +74,11 @@ urlUploadRoutes.post(
       };
 
       const { key } = await dbAdapter.uploadStream(
-        response.body, 
-        metadata, 
+        response.body,
+        metadata,
         c.executionCtx.waitUntil.bind(c.executionCtx),
-        mimeType
+        mimeType,
+        requestedFileType ? { fileType: requestedFileType } : undefined,
       );
       await upsertFileIndex(c.env, key, metadata);
       return ok(c, { key, fileSize });

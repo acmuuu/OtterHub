@@ -6,7 +6,7 @@ import { getFileUrl } from "@/lib/api";
 import { shouldBlur, shouldLoadImage } from "@/lib/utils";
 import { PhotoView } from "react-photo-view";
 import { cn } from "@/lib/utils";
-import { NsfwSign } from "../file-card/NsfwSign";
+import { NsfwSign } from "../cards/NsfwSign";
 import { useGeneralSettingsStore } from "@/stores/general-store";
 import { Image } from "lucide-react";
 
