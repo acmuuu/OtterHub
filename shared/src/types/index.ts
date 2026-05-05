@@ -20,10 +20,15 @@ export enum FileType {
   Audio = 'audio',
   Video = 'video',
   Document = 'doc',
+  /** 仅供 API 显式上传；不参与 MIME 推断，不在网页主库分页中展示 */
+  Other = 'other',
   Trash = 'trash',
 }
 
 export const trashPrefix = 'trash:';
+
+/** 主库存储类型（非回收站）；含仅供 API 使用的 {@link FileType.Other} */
+export type MainStorageFileType = Exclude<FileType, FileType.Trash>;
 
 // 统一API响应类型
 export type ApiResponse<T = any> = {
@@ -63,12 +68,12 @@ export type UploadTagsInput = FileTag[];
 export interface SingleUploadPayload {
   nsfw?: boolean;
   tags?: UploadTagsInput;
-  /** 与 FileType 一致：img | audio | video | doc；不传则按 MIME/扩展名推断 */
-  fileType?: FileType.Image | FileType.Audio | FileType.Video | FileType.Document;
+  /** 与 FileType 一致（含 {@link FileType.Other}）；不传则按 MIME/扩展名推断（Other 必须由 API 指定） */
+  fileType?: MainStorageFileType;
 }
 
 export interface ChunkUploadInitPayload {
-  fileType: FileType;
+  fileType: MainStorageFileType;
   fileName: string;
   fileSize: number;
   totalChunks: number;
@@ -80,9 +85,24 @@ export interface UrlUploadPayload {
   fileName?: string;
   isNsfw?: boolean;
   tags?: UploadTagsInput;
-  /** 不传则按远端 Content-Type / 文件名推断 */
-  fileType?: FileType.Image | FileType.Audio | FileType.Video | FileType.Document;
+  /** 不传则按远端 Content-Type / 文件名推断（Other 仅可显式指定） */
+  fileType?: MainStorageFileType;
 }
+
+/** `POST /upload` 与 `POST /upload/by-url` 成功时 `data` 的结构 */
+export type SuccessfulSingleUploadPayload = {
+  key: string;
+  fileName: string;
+  fileSize: number;
+  uploadedAt: number;
+  /** 使用完整 KV key（URL 编码），直接访问二进制 */
+  urlLong: string;
+  /** 基于 D1 `short_id` 的 `/file/{shortId}`；未绑定 D1 或未分配时为 null */
+  urlShort: string | null;
+  /** 站点根路径 `/{shortId}`（会重定向至 `urlShort`）；无短链时为 null */
+  shortLink: string | null;
+  shortId: string | null;
+};
 
 // 分片信息（用于大文件分片上传）
 export const chunkPrefix = 'chunk_';

@@ -22,6 +22,7 @@ chunkUploadRoutes.post(
         FileType.Audio,
         FileType.Video,
         FileType.Document,
+        FileType.Other,
       ]),
       fileName: z.string().min(1).max(MAX_FILENAME_LENGTH),
       fileSize: z.number().int().positive(),

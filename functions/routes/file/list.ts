@@ -23,6 +23,7 @@ listRoutes.get(
           FileType.Audio,
           FileType.Video,
           FileType.Document,
+          FileType.Other,
           FileType.Trash,
         ])
         .optional(),

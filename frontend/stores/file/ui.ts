@@ -11,6 +11,7 @@ const DEFAULT_VIEW_MODE_BY_TYPE: Record<FileType, ViewMode> = {
   [FileType.Audio]: ViewMode.Grid,
   [FileType.Video]: ViewMode.Grid,
   [FileType.Document]: ViewMode.Grid,
+  [FileType.Other]: ViewMode.Grid,
   [FileType.Trash]: ViewMode.Grid,
 };
 
@@ -98,6 +99,7 @@ export const useFileUIStore = create<FileUIState>()(
         [FileType.Audio]: [],
         [FileType.Video]: [],
         [FileType.Document]: [],
+        [FileType.Other]: [],
         [FileType.Trash]: [],
       },
       
@@ -281,6 +283,7 @@ export const clearAllSelection = () => {
       [FileType.Audio]: [],
       [FileType.Video]: [],
       [FileType.Document]: [],
+      [FileType.Other]: [],
       [FileType.Trash]: [],
     },
   });

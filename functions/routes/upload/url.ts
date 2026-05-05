@@ -8,6 +8,7 @@ import type { Env } from '../../types/hono';
 import { fail, ok } from '@utils/response';
 import { normalizeUploadTags } from '@utils/upload-tags';
 import { upsertFileIndex } from '@utils/file-index';
+import { buildSuccessfulSingleUploadPayload } from '@utils/upload-response';
 import {
   extractMimeType,
   extractFileNameFromDisposition,
@@ -28,7 +29,13 @@ urlUploadRoutes.post(
       isNsfw: z.boolean().optional().default(false),
       tags: z.array(z.enum(FileTag)).optional(),
       fileType: z
-        .enum([FileType.Image, FileType.Audio, FileType.Video, FileType.Document])
+        .enum([
+          FileType.Image,
+          FileType.Audio,
+          FileType.Video,
+          FileType.Document,
+          FileType.Other,
+        ])
         .optional(),
     })
   ),
@@ -81,7 +88,13 @@ urlUploadRoutes.post(
         requestedFileType ? { fileType: requestedFileType } : undefined,
       );
       await upsertFileIndex(c.env, key, metadata);
-      return ok(c, { key, fileSize });
+      const data = await buildSuccessfulSingleUploadPayload(
+        c.env,
+        c.req.url,
+        key,
+        metadata,
+      );
+      return ok(c, data);
     } catch (error: any) {
       console.error('Remote upload error:', error);
       return fail(c, `Failed to upload remote file: ${error.message}`, 500);

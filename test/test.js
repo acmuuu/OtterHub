@@ -86,10 +86,12 @@ describe("API Endpoints", function () {
       assert.equal(response.status, 200);
       const result = await response.json();
       assert.ok(result.success);
-      
-      // 清理测试上传的文件
-      const fileKey = result.data;
-      await fetch(`${API_URL}/file/${fileKey}`, {
+
+      assert.ok(result.data.key);
+      assert.ok(result.data.urlLong);
+
+      const fileKey = result.data.key;
+      await fetch(`${API_URL}/file/${encodeURIComponent(fileKey)}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${API_TOKEN}`,
@@ -127,10 +129,10 @@ describe("API Endpoints", function () {
 
       const result = await response.json();
       assert.ok(result.success);
-      assert.ok(result.data);
+      assert.ok(result.data && result.data.key);
+      assert.ok(result.data.urlLong);
 
-      // Store the uploaded file key for the next test
-      uploadedFileKey = result.data;
+      uploadedFileKey = result.data.key;
     });
   });
 
@@ -142,11 +144,14 @@ describe("API Endpoints", function () {
         this.skip();
       }
 
-      const response = await fetch(`${API_URL}/file/${uploadedFileKey}`, {
-        headers: {
-          Cookie: authCookie,
+      const response = await fetch(
+        `${API_URL}/file/${encodeURIComponent(uploadedFileKey)}`,
+        {
+          headers: {
+            Cookie: authCookie,
+          },
         },
-      });
+      );
       assert.equal(response.status, 200);
 
       // Check that the response is the SVG we uploaded
@@ -183,11 +188,14 @@ describe("API Endpoints", function () {
       }
 
       // 移入回收站后，原始路径应该返回 404 (或失败)
-      const originalResponse = await fetch(`${API_URL}/file/${uploadedFileKey}`, {
-        headers: {
-          Cookie: authCookie,
+      const originalResponse = await fetch(
+        `${API_URL}/file/${encodeURIComponent(uploadedFileKey)}`,
+        {
+          headers: {
+            Cookie: authCookie,
+          },
         },
-      });
+      );
       assert.notEqual(originalResponse.status, 200);
 
       // 从回收站路径应该可以访问到文件内容
@@ -219,11 +227,14 @@ describe("API Endpoints", function () {
       assert.ok(result.success);
 
       // 还原后，原始路径应该恢复访问
-      const restoredResponse = await fetch(`${API_URL}/file/${uploadedFileKey}`, {
-        headers: {
-          Cookie: authCookie,
+      const restoredResponse = await fetch(
+        `${API_URL}/file/${encodeURIComponent(uploadedFileKey)}`,
+        {
+          headers: {
+            Cookie: authCookie,
+          },
         },
-      });
+      );
       assert.equal(restoredResponse.status, 200);
     });
   });
@@ -236,12 +247,15 @@ describe("API Endpoints", function () {
         this.skip();
       }
 
-      const response = await fetch(`${API_URL}/file/${uploadedFileKey}`, {
-        method: "DELETE",
-        headers: {
-          Cookie: authCookie,
+      const response = await fetch(
+        `${API_URL}/file/${encodeURIComponent(uploadedFileKey)}`,
+        {
+          method: "DELETE",
+          headers: {
+            Cookie: authCookie,
+          },
         },
-      });
+      );
       assert.equal(response.status, 200);
 
       const result = await response.json();

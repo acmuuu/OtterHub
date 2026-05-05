@@ -11,7 +11,7 @@ import { APP_NAME } from "@/lib/ui-text";
 
 export const metadata: Metadata = {
   title: `API · 上传说明 · ${APP_NAME}`,
-  description: `${APP_NAME} 上传接口：鉴权方式、单次上传、URL 拉取与分片上传，以及四类文件前缀说明`,
+  description: `${APP_NAME} 上传接口：鉴权方式、单次上传、URL 拉取与分片上传，以及文件类型前缀说明（含仅供 API 的 other）`,
 };
 
 function Code({ children }: { children: React.ReactNode }) {
@@ -81,10 +81,18 @@ export default function ApiHelpPage() {
         <section className="mt-12 space-y-4">
           <h2 className="text-xl font-semibold tracking-tight">文件类型前缀</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            站内列表与 KV key 使用前四类之一；不传 <Code>fileType</Code>{" "}
-            时，一般由浏览器/远端的 MIME 与扩展名推断。若客户端只提供{" "}
+            存储 key 使用类型前缀：<Code>img</Code> / <Code>audio</Code> /
+            <Code>video</Code> / <Code>doc</Code> /
+            <Code>{FileType.Other}</Code>。
+            前四类在不传 <Code>fileType</Code>{" "}
+            时一般由 MIME 与扩展名推断。
+            <Code>{FileType.Other}</Code>{" "}
+            仅能通过请求显式指定，服务端<strong>不会</strong>自动推断；
+            适合 API 存档、不占网页四个主分类列表展示的文件。
+            客户端若只有{" "}
             <Code>application/octet-stream</Code>{" "}
-            等泛型类型，建议显式指定下列枚举值：
+            等泛型 MIME，可对前四类显式传入 <Code>fileType</Code>
+            ，或为冷数据传入 <Code>{FileType.Other}</Code>。
           </p>
           <div className="overflow-hidden rounded-xl border border-glass-border">
             <table className="w-full text-sm">
@@ -124,6 +132,13 @@ export default function ApiHelpPage() {
                     doc:{'<id>'}.pdf
                   </td>
                 </tr>
+                <tr className="border-t border-glass-border">
+                  <td className="px-4 py-2 font-mono text-xs">{FileType.Other}</td>
+                  <td className="px-4 py-2">其他（仅 API，网页主页四分类不展示）</td>
+                  <td className="px-4 py-2 font-mono text-[11px] text-muted-foreground hidden sm:table-cell">
+                    other:{'<id>'}.bin
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -146,9 +161,25 @@ export default function ApiHelpPage() {
               <Code>private</Code>）。
             </li>
             <li>
-              <Code>fileType</Code>（可选）：值为上表四类之一。
+              <Code>fileType</Code>（可选）：<Code>img</Code> /
+              <Code>audio</Code> /
+              <Code>video</Code> /
+              <Code>doc</Code> /
+              <Code>{FileType.Other}</Code>；
+              不传则按 MIME/扩展名<strong>仅可对前四类</strong>推断，不会得到{" "}
+              <Code>{FileType.Other}</Code>。
             </li>
-            <li>成功：<Code>&#123; &quot;success&quot;: true, &quot;data&quot;: &quot;img:xxxx.jpg&quot; &#125;</Code>。</li>
+            <li>
+              成功时 <Code>data</Code>{" "}
+              为 JSON 对象，含 <Code>key</Code>、<Code>fileName</Code>、
+              <Code>fileSize</Code>、<Code>uploadedAt</Code>、可直接打开的{" "}
+              <Code>urlLong</Code>（对完整 KV key 路径编码）；若已绑定 D1
+              并分配短链则有 <Code>urlShort</Code>{" "}
+              （<Code>/file/&#123;shortId&#125;</Code>）、根路径跳转{" "}
+              <Code>shortLink</Code>{" "}
+              （<Code>/&#123;shortId&#125;</Code>）
+              与 <Code>shortId</Code>；无 D1 时后三项多为 <Code>null</Code>。
+            </li>
           </ul>
           <Pre>
             <code>{multipartExample}</code>
@@ -163,6 +194,10 @@ export default function ApiHelpPage() {
             服务端代拉指定 URL；可补 <Code>fileName</Code>；
             <Code>isNsfw</Code> 与 <Code>tags</Code>{" "}
             规则同上。亦可传 <Code>fileType</Code>。
+            成功时 <Code>data</Code>{" "}
+            与 <Code>POST /upload</Code>{" "}
+            相同（结构化对象含 <Code>urlLong</Code>、<Code>urlShort</Code>{" "}
+            等）。
           </p>
           <Pre>
             <code>{byUrlExample}</code>

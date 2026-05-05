@@ -1,7 +1,8 @@
 import { FileType } from "@shared/types";
 
 /**
- * 对外 URL 段（与 KV 中 FileType 枚举值可不同：如 image 对应 img、document 对应 doc）
+ * 对外 URL 段（与 KV 中 FileType 枚举值可不同：如 image 对应 img、document 对应 doc）。
+ * 不含 Other：该行类型无路径段，仅 API 写入，网页 Tab 不展示。
  */
 export const FILE_TYPE_PATH_SEGMENTS = [
   "image",

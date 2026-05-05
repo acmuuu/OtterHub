@@ -7,6 +7,7 @@ import {
   FileTag,
   ListFilesResponse,
   SingleUploadPayload,
+  SuccessfulSingleUploadPayload,
 } from "@shared/types";
 import { ListFilesRequest } from "@/lib/types";
 
@@ -95,8 +96,11 @@ function xhrPostForm<T>(
 /**
  * 上传文件
  */
-export async function uploadFile(file: File, nsfw?: boolean): Promise<string> {
-  return unwrap<string>(
+export async function uploadFile(
+  file: File,
+  nsfw?: boolean,
+): Promise<SuccessfulSingleUploadPayload> {
+  return unwrap<SuccessfulSingleUploadPayload>(
     client.upload.$post({
       form: {
         file: file,
@@ -110,7 +114,7 @@ export async function uploadFileWithProgress(
   file: File,
   options: SingleUploadPayload,
   onProgress?: (p: UploadProgress) => void,
-): Promise<string> {
+): Promise<SuccessfulSingleUploadPayload> {
   const form = new FormData();
   form.append("file", file);
   form.append("nsfw", options.nsfw ? "true" : "false");
@@ -120,7 +124,7 @@ export async function uploadFileWithProgress(
   }
 
   const url = `${API_URL}/upload`;
-  return xhrPostForm<string>(url, form, onProgress);
+  return xhrPostForm<SuccessfulSingleUploadPayload>(url, form, onProgress);
 }
 
 /**

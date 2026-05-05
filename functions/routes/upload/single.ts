@@ -6,6 +6,7 @@ import { fail, ok } from '@utils/response';
 import { normalizeUploadTags, parseUploadTags } from '@utils/upload-tags';
 import { upsertFileIndex } from '@utils/file-index';
 import { parseUploadFileTypeField } from '@utils/upload-hint';
+import { buildSuccessfulSingleUploadPayload } from '@utils/upload-response';
 
 export const singleUploadRoutes = new Hono<{ Bindings: Env }>();
 
@@ -48,7 +49,13 @@ singleUploadRoutes.post('/', async (c) => {
       requestedFileType ? { fileType: requestedFileType } : undefined,
     );
     await upsertFileIndex(c.env, key, metadata);
-    return ok(c, key);
+    const data = await buildSuccessfulSingleUploadPayload(
+      c.env,
+      c.req.url,
+      key,
+      metadata,
+    );
+    return ok(c, data);
   } catch (error: any) {
     console.error('Upload error:', error);
     if (error.message?.startsWith('Invalid tag') || error.message === 'Invalid tags payload') {

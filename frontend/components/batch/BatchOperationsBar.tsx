@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Trash2, X, Toolbox, Check, Tag, Copy, FilePen, Share2, ImageIcon, Music, Video, FileText, XIcon } from "lucide-react";
+import { Download, Trash2, X, Toolbox, Check, Tag, Copy, FilePen, Share2, ImageIcon, Music, Video, FileText, XIcon, Package } from "lucide-react";
 import { useState, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ const typeIcons: Record<FileType, typeof ImageIcon> = {
   [FileType.Audio]: Music,
   [FileType.Video]: Video,
   [FileType.Document]: FileText,
+  [FileType.Other]: Package,
   [FileType.Trash]: Trash2,
 };
 
@@ -39,6 +40,7 @@ const typeNames: Record<FileType, string> = {
   [FileType.Audio]: "音频",
   [FileType.Video]: "视频",
   [FileType.Document]: "文档",
+  [FileType.Other]: "其他",
   [FileType.Trash]: "回收站",
 };
 

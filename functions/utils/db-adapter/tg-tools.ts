@@ -1,6 +1,5 @@
 import { getContentTypeByExt, getFileExt, getFileTypeByMimeOrExt } from "../file";
-import type { StoredUploadFileType } from "@utils/upload-hint";
-import { FileType } from "@shared/types";
+import { FileType, MainStorageFileType } from "@shared/types";
 
 /**
  * 构建 Telegram API URL
@@ -83,7 +82,7 @@ export async function processGifFile(
 export function resolveFileDescriptor(
   file: File,
   fileName: string,
-  preferred?: StoredUploadFileType,
+  preferred?: MainStorageFileType,
 ): {
   apiEndpoint: string;
   field: string;
@@ -134,6 +133,15 @@ export function resolveFileDescriptor(
         apiEndpoint: "sendAudio",
         field: "audio",
         fileType: FileType.Audio,
+        ext,
+      };
+    }
+
+    if (preferred === FileType.Other) {
+      return {
+        apiEndpoint: "sendDocument",
+        field: "document",
+        fileType: FileType.Other,
         ext,
       };
     }

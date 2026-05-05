@@ -23,6 +23,7 @@ import {
   FileItem,
   FileType,
   FileTag,
+  MainStorageFileType,
   MAX_CHUNK_SIZE,
   MAX_FILENAME_LENGTH,
   MAX_FILE_SIZE,
@@ -35,6 +36,7 @@ const ACCEPT_BY_TYPE: Record<FileType, string | undefined> = {
   [FileType.Audio]: ".mp3,.wav,.ogg,.flac,.aac,.m4a,.wma,.ape,.opus",
   [FileType.Video]: ".mp4,.webm,.mov,.avi,.mkv,.m4v,.3gp,.ogv",
   [FileType.Document]: undefined,
+  [FileType.Other]: undefined,
   [FileType.Trash]: undefined,
 };
 
@@ -43,6 +45,7 @@ const FILE_TYPE_LABELS: Record<FileType, string> = {
   [FileType.Audio]: "音乐",
   [FileType.Video]: "视频",
   [FileType.Document]: "文档",
+  [FileType.Other]: "其他(API)",
   [FileType.Trash]: "回收站",
 };
 
@@ -55,6 +58,9 @@ function matchesUploadTarget(file: File, targetType: FileType) {
   if (targetType === FileType.Document) {
     return category !== "image" && category !== "audio" && category !== "video";
   }
+
+  /** 网页不传 Other，仅占位 */
+  if (targetType === FileType.Other) return false;
 
   return true;
 }
@@ -130,7 +136,7 @@ export function useFileUpload() {
           const isUnsafe = nsfwDetection
             ? await nsfwDetector.isUnsafeImg(file)
             : false;
-          const key = await uploadFileWithProgress(
+          const uploaded = await uploadFileWithProgress(
             file,
             { nsfw: isUnsafe, tags: defaultUploadTags },
             (p) => {
@@ -143,11 +149,12 @@ export function useFileUpload() {
           setUploadProgress({ ...uploadProgressMap });
 
           const fileItem: FileItem = {
-            name: key,
+            name: uploaded.key,
+            shortId: uploaded.shortId ?? undefined,
             metadata: {
-              fileName: file.name,
-              fileSize: file.size,
-              uploadedAt: Date.now(),
+              fileName: uploaded.fileName,
+              fileSize: uploaded.fileSize,
+              uploadedAt: uploaded.uploadedAt,
               liked: false,
               tags: isUnsafe ? [FileTag.NSFW] : [],
             },
@@ -178,7 +185,7 @@ export function useFileUpload() {
         let stopPolling = false;
 
         try {
-          const fileType = getFileType(file.type, file.name);
+          const fileType = getFileType(file.type, file.name) as MainStorageFileType;
           const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
 
           const key = await uploadChunkInit({
